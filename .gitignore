@@ -1,0 +1,11 @@
+.env
+token.json
+gcp-oauth.keys.json
+*.db
+data/
+__pycache__/
+.venv/
+.pytest_cache/
+.idea/
+.vscode/
+

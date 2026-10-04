@@ -1,0 +1,13 @@
+# MCP server rules (apply to app/mcp_servers/**)
+- `FastMCP` from `mcp.server.fastmcp`; `mcp.run(transport="stdio")`.
+- NEVER write to stdout. Log to stderr or a file.
+- Validate all inputs (email format, ISO datetime with timezone, positive ints, max lengths).
+- Success `{"ok": true, "data": ...}`; failure `{"ok": false, "error": {"code": <taxonomy>, "message": str, "retryable": bool}}`. Codes: auth_error, permission_error, validation_error, not_found, rate_limited, timeout, api_error, unexpected.
+- Retry 429/5xx with exponential backoff (3 attempts), honor Retry-After. Timeout on every call.
+- Each server has its own tools and imports no other server. Shared helpers only via `common.py` and `google_auth.py`.
+- Tool docstrings are read by the LLM: make them precise.
+- GitHub server is read-only unless `GITHUB_ALLOW_WRITE=true` (and then guarded).
+- Calendar `create_event` detects duplicates (same title + start) and returns `duplicate`.
+- Gmail: cap recipients with `MAX_EMAIL_RECIPIENTS`; MIME via stdlib `email`; never log bodies unless `LOG_EMAIL_BODIES=true`.
+- Support `MOCK_MODE=true` by letting the client layer be swapped for fakes in `app/testing/fakes.py`.
+- Optional manual check: `npx @modelcontextprotocol/inspector python -m app.mcp_servers.<name>_server` (dev tool only, not a project dependency).

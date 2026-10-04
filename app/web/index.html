@@ -1,0 +1,3607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multi-Agent Assistant</title>
+
+<!-- Modern Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --bg-base: #07050e;
+    --bg-card: rgba(18, 14, 32, 0.75);
+    --bg-card-hover: rgba(26, 20, 46, 0.88);
+    --bg-card-inner: rgba(12, 9, 22, 0.85);
+    --bg-sidebar: rgba(13, 10, 24, 0.95);
+    --bg-inspector: rgba(14, 11, 26, 0.95);
+    
+    --border-light: rgba(255, 255, 255, 0.08);
+    --border-top-highlight: rgba(255, 255, 255, 0.16);
+    --border-subtle: rgba(255, 255, 255, 0.04);
+    --border-accent: rgba(147, 51, 234, 0.45);
+    
+    --text-primary: #f8fafc;
+    --text-secondary: #9491a8;
+    --text-muted: #64617a;
+    
+    --accent-purple: #8b5cf6;
+    --accent-indigo: #6366f1;
+    --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+    --accent-glow: rgba(124, 58, 237, 0.45);
+    --accent-soft: rgba(139, 92, 246, 0.15);
+    
+    --success: #22c55e;
+    --success-soft: rgba(34, 197, 94, 0.15);
+    --warning: #f59e0b;
+    --warning-soft: rgba(245, 158, 11, 0.15);
+    --danger: #ef4444;
+    --danger-soft: rgba(239, 68, 68, 0.15);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+}
+
+/* SLEEK TRANSLUCENT CUSTOM SCROLLBARS */
+::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.13);
+    border-radius: 999px;
+    transition: background 0.15s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, 0.5);
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+body {
+    background-color: var(--bg-base);
+    background-image: 
+        radial-gradient(circle at 18% 18%, rgba(124, 58, 237, 0.12) 0%, transparent 42%),
+        radial-gradient(circle at 85% 15%, rgba(99, 102, 241, 0.1) 0%, transparent 38%),
+        radial-gradient(circle at 50% 88%, rgba(147, 51, 234, 0.08) 0%, transparent 50%);
+    color: var(--text-primary);
+    font-family: 'Plus Jakarta Sans', Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+    height: 100vh;
+}
+
+/* 3-COLUMN APP SHELL */
+.app {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+/* 1. SIDEBAR (LEFT) */
+.sidebar {
+    width: 250px;
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+    padding: 20px 14px 16px;
+    flex-shrink: 0;
+    user-select: none;
+    z-index: 25;
+    backdrop-filter: blur(20px);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 6px 20px;
+    font-weight: 800;
+    font-size: 15.5px;
+    letter-spacing: -0.02em;
+    color: #ffffff;
+}
+
+.logo-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    background: var(--accent-gradient);
+    box-shadow: 0 4px 20px var(--accent-glow);
+    color: white;
+    font-size: 16px;
+}
+
+.new-chat-btn {
+    width: 100%;
+    border: 1px solid var(--border-light);
+    border-top: 1px solid var(--border-top-highlight);
+    background: var(--bg-card);
+    color: #ffffff;
+    padding: 10px 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 20px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.new-chat-btn:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-accent);
+    transform: translateY(-1px);
+}
+
+.nav-section-title {
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    padding: 0 10px 8px;
+    text-transform: uppercase;
+}
+
+.nav-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 20px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9.5px 12px;
+    border-radius: 12px;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+    width: 100%;
+}
+
+.nav-item:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-item.active {
+    color: #ffffff;
+    background: var(--accent-gradient);
+    box-shadow: 0 6px 22px -2px var(--accent-glow);
+    font-weight: 600;
+}
+
+.nav-icon {
+    width: 18px;
+    text-align: center;
+    font-size: 15px;
+    color: inherit;
+}
+
+.sidebar-recent-section {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    border-top: 1px solid var(--border-subtle);
+    padding-top: 14px;
+    margin-bottom: 12px;
+}
+
+.sidebar-recent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow-y: auto;
+}
+
+.chat-item {
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.15s ease;
+}
+
+.chat-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+}
+
+.chat-item.selected {
+    background: var(--accent-soft);
+    color: #ffffff;
+    font-weight: 600;
+    border-left: 2px solid var(--accent-purple);
+}
+
+.chat-item-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidebar-footer {
+    border-top: 1px solid var(--border-light);
+    padding-top: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.system-status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 11.5px;
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 10px var(--success);
+}
+
+.status-dot.offline {
+    background: var(--danger);
+    box-shadow: 0 0 10px var(--danger);
+}
+
+.settings-btn {
+    background: transparent;
+    border: 0;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px;
+    border-radius: 6px;
+    transition: color 0.15s;
+}
+
+.settings-btn:hover {
+    color: #ffffff;
+}
+
+/* 2. MAIN VIEWPORT (CENTER) */
+.main-viewport {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background: transparent;
+}
+
+/* TOP HEADER */
+.top-header {
+    height: 64px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    flex-shrink: 0;
+    background: rgba(13, 10, 24, 0.65);
+    backdrop-filter: blur(20px);
+    z-index: 15;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.header-title {
+    font-weight: 800;
+    font-size: 17px;
+    letter-spacing: -0.02em;
+    color: #ffffff;
+}
+
+.thread-badge {
+    font-size: 11px;
+    background: rgba(18, 14, 32, 0.85);
+    border: 1px solid var(--border-light);
+    padding: 3px 9px;
+    border-radius: 7px;
+    color: var(--text-secondary);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ai-active-pill {
+    font-size: 12px;
+    font-weight: 600;
+    color: #ffffff;
+    background: var(--accent-gradient);
+    padding: 6px 14px;
+    border-radius: 999px;
+    box-shadow: 0 4px 16px var(--accent-glow);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.inspector-toggle-btn {
+    background: rgba(18, 14, 32, 0.85);
+    border: 1px solid var(--border-light);
+    border-top: 1px solid var(--border-top-highlight);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+}
+
+.inspector-toggle-btn:hover {
+    color: #ffffff;
+    border-color: var(--border-accent);
+}
+
+.inspector-toggle-btn.active {
+    background: var(--accent-soft);
+    color: #c4b5fd;
+    border-color: var(--border-accent);
+}
+
+/* WORKSPACE VIEWPORT */
+.workspace-viewport {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    height: calc(100vh - 64px);
+}
+
+.workspace {
+    display: none;
+    height: 100%;
+    width: 100%;
+    overflow-y: auto;
+}
+
+.workspace.active {
+    display: block;
+}
+
+.workspace-content {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 30px 32px 60px;
+}
+
+.page-title {
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 6px;
+    color: #ffffff;
+    letter-spacing: -0.025em;
+}
+
+.page-subtitle {
+    color: var(--text-secondary);
+    margin-bottom: 26px;
+    font-size: 13.5px;
+}
+
+/* 3. EXECUTION INSPECTOR (RIGHT) */
+.inspector-panel {
+    width: 290px;
+    background: var(--bg-inspector);
+    border-left: 1px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    flex-shrink: 0;
+    overflow: hidden;
+    transition: margin-right 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s ease;
+    user-select: none;
+    backdrop-filter: blur(24px);
+    z-index: 20;
+}
+
+.inspector-panel.collapsed {
+    margin-right: -290px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.inspector-header {
+    height: 58px;
+    border-bottom: 1px solid var(--border-light);
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    background: rgba(10, 8, 18, 0.5);
+}
+
+.inspector-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.live-indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.7);
+    animation: pulse-dot 2.5s infinite ease-in-out;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.45; transform: scale(0.85); }
+}
+
+.inspector-close-btn {
+    background: transparent;
+    border: 0;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 13px;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: grid;
+    place-items: center;
+    transition: all 0.15s ease;
+}
+
+.inspector-close-btn:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.inspector-tabs {
+    display: flex;
+    padding: 4px;
+    gap: 2px;
+    border-bottom: 1px solid var(--border-light);
+    background: rgba(0, 0, 0, 0.35);
+    flex-shrink: 0;
+}
+
+.inspector-tab {
+    flex: 1;
+    text-align: center;
+    padding: 6px 2px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--text-secondary);
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.inspector-tab:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.inspector-tab.active {
+    color: #e9d5ff;
+    background: rgba(139, 92, 246, 0.18);
+    border-color: rgba(139, 92, 246, 0.35);
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
+    font-weight: 700;
+}
+
+.inspector-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.inspector-pane {
+    display: none;
+    height: 100%;
+}
+
+.inspector-pane.active {
+    display: block;
+}
+
+.inspector-section-label {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #8b87a8;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.inspector-empty-card {
+    border: 1px dashed rgba(139, 92, 246, 0.22);
+    background: rgba(139, 92, 246, 0.03);
+    border-radius: 12px;
+    padding: 22px 14px;
+    text-align: center;
+    margin-top: 4px;
+}
+
+.empty-node-glyph {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(139, 92, 246, 0.12);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    color: #c084fc;
+    display: grid;
+    place-items: center;
+    margin: 0 auto 10px;
+    font-size: 13px;
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.2);
+}
+
+.empty-card-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin-bottom: 4px;
+}
+
+.empty-card-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.45;
+}
+
+/* GLASSMORPHISM CARDS */
+.glass-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-top: 1px solid var(--border-top-highlight);
+    border-radius: 18px;
+    overflow: hidden;
+    margin-bottom: 22px;
+    box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(16px);
+}
+
+.glass-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.glass-panel-title {
+    font-weight: 700;
+    font-size: 14px;
+    color: #ffffff;
+    letter-spacing: -0.01em;
+}
+
+/* AGENT SPECIALIST CHAT CONSOLES */
+.agent-chat-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 440px;
+    padding: 0;
+    overflow: hidden;
+    margin-top: 18px;
+    border: 1px solid var(--border-light);
+    border-top: 1px solid var(--border-top-highlight);
+    border-radius: 18px;
+    background: var(--bg-card);
+    box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(16px);
+}
+
+.agent-chat-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+    background: rgba(18, 12, 34, 0.45);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.agent-chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 280px;
+    max-height: 440px;
+}
+
+.agent-chat-input-bar {
+    padding: 12px 18px;
+    border-top: 1px solid var(--border-subtle);
+    background: rgba(10, 7, 20, 0.5);
+}
+
+.citation-pill {
+    background: rgba(139, 92, 246, 0.22);
+    border: 1px solid rgba(139, 92, 246, 0.45);
+    color: #c4b5fd;
+    font-size: 11px;
+    padding: 2px 8px;
+    margin: 0 3px;
+    border-radius: 6px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+/* REAL METRIC CARDS */
+.metrics-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.metric-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-top: 1px solid var(--border-top-highlight);
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: 0 8px 28px -4px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(16px);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-accent);
+}
+
+.metric-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.metric-icon-box {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 15px;
+    color: #c4b5fd;
+}
+
+.metric-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.metric-value-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.metric-value {
+    font-size: 26px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+}
+
+.metric-trend {
+    font-size: 11px;
+    font-weight: 600;
+    color: #4ade80;
+    background: var(--success-soft);
+    padding: 3px 8px;
+    border-radius: 999px;
+}
+
+/* REAL SUBSYSTEM STATUS GRID */
+.system-status-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+/* CAPABILITY CARDS */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.dashboard-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-top: 1px solid var(--border-top-highlight);
+    border-radius: 16px;
+    padding: 18px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-2px);
+    background: var(--bg-card-hover);
+    border-color: var(--border-accent);
+}
+
+.dashboard-card-icon {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: var(--accent-soft);
+    color: #c4b5fd;
+    font-size: 17px;
+    margin-bottom: 12px;
+}
+
+.dashboard-card h3 {
+    margin: 0 0 5px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.dashboard-card p {
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* LIST ITEMS & DETAILS */
+.list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 13px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background 0.15s ease;
+}
+
+.list-item:last-child {
+    border-bottom: none;
+}
+
+.list-item:hover {
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.item-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 3px;
+}
+
+.item-meta {
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.badge {
+    font-size: 10.5px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--success-soft);
+    color: #4ade80;
+    font-weight: 600;
+}
+
+.badge.pending {
+    background: var(--warning-soft);
+    color: #fbbf24;
+}
+
+.badge.danger {
+    background: var(--danger-soft);
+    color: #f87171;
+}
+
+.badge.neutral {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+}
+
+/* BUTTONS */
+.btn {
+    border: 1px solid var(--border-light);
+    border-top: 1px solid var(--border-top-highlight);
+    background: rgba(26, 20, 46, 0.9);
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 12.5px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+    text-decoration: none;
+}
+
+.btn:hover {
+    background: rgba(36, 28, 62, 0.95);
+    border-color: var(--border-accent);
+}
+
+.btn.primary {
+    background: var(--accent-gradient);
+    border-color: transparent;
+    color: #ffffff;
+    box-shadow: 0 4px 14px var(--accent-glow);
+}
+
+.btn.primary:hover {
+    opacity: 0.95;
+    transform: translateY(-1px);
+}
+
+.btn.danger {
+    background: var(--danger-soft);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #f87171;
+}
+
+.btn.danger:hover {
+    background: rgba(239, 68, 68, 0.25);
+}
+
+.btn.sm {
+    padding: 5px 10px;
+    font-size: 11.5px;
+    border-radius: 8px;
+}
+
+/* INPUTS */
+.input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+input[type="text"], input[type="email"], input[type="datetime-local"], select, textarea {
+    width: 100%;
+    background: var(--bg-card-inner);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    padding: 9px 13px;
+    color: #ffffff;
+    font: inherit;
+    font-size: 13px;
+    transition: border-color 0.15s;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--border-accent);
+}
+
+/* EMPTY STATES */
+.empty-state {
+    padding: 44px 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--text-secondary);
+}
+
+.empty-state-icon {
+    font-size: 26px;
+    color: #a78bfa;
+    margin-bottom: 12px;
+}
+
+.empty-state-title {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 4px;
+}
+
+.empty-state-desc {
+    font-size: 12.5px;
+    max-width: 340px;
+    line-height: 1.5;
+    margin-bottom: 16px;
+}
+
+/* TABS */
+.tabs-bar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 6px;
+}
+
+.tab-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.tab-btn:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.tab-btn.active {
+    color: #ffffff;
+    background: var(--accent-soft);
+    font-weight: 700;
+}
+
+/* CHAT WORKSPACE */
+#workspace-chat.active {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+}
+
+.chat-thread-bar {
+    height: 44px;
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    background: rgba(13, 10, 24, 0.65);
+    flex-shrink: 0;
+}
+
+.chat-thread-title {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.chat-messages-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.message-bubble {
+    max-width: 780px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.message-bubble.user {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.user-text {
+    background: #1f183c;
+    border: 1px solid var(--border-light);
+    border-top: 1px solid var(--border-top-highlight);
+    padding: 11px 16px;
+    border-radius: 14px;
+    max-width: 640px;
+    font-size: 13.5px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #ffffff;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.assistant-message {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.assistant-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--accent-gradient);
+    box-shadow: 0 2px 10px var(--accent-glow);
+    display: grid;
+    place-items: center;
+    color: white;
+    font-size: 13px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.assistant-content {
+    flex: 1;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: #e2e8f0;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.chat-input-container {
+    padding: 14px 24px 22px;
+    flex-shrink: 0;
+    background: transparent;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.chat-input-box {
+    max-width: 780px;
+    margin: 0 auto;
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-top: 1px solid var(--border-top-highlight);
+    border-radius: 14px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(16px);
+    transition: border-color 0.15s;
+}
+
+.chat-input-box:focus-within {
+    border-color: var(--border-accent);
+}
+
+.chat-textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    resize: none;
+    min-height: 38px;
+    max-height: 130px;
+    font: inherit;
+    font-size: 13px;
+    padding: 8px 4px;
+    line-height: 1.5;
+}
+
+.chat-textarea:focus {
+    outline: none;
+}
+
+.send-btn {
+    border: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: var(--accent-gradient);
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    display: grid;
+    place-items: center;
+    transition: all 0.15s;
+    margin-bottom: 2px;
+    box-shadow: 0 2px 10px var(--accent-glow);
+}
+
+.send-btn:hover {
+    transform: translateY(-1px);
+}
+
+.send-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* HITL APPROVAL CARD */
+.approval-card {
+    background: rgba(26, 18, 48, 0.85);
+    border: 1px solid #7c3aed;
+    border-radius: 14px;
+    padding: 16px;
+    margin-top: 10px;
+    box-shadow: 0 4px 24px rgba(124, 58, 237, 0.25);
+}
+
+.approval-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    color: #c4b5fd;
+    margin-bottom: 6px;
+}
+
+.approval-summary {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    line-height: 1.45;
+}
+
+.approval-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 12px;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+}
+
+.approval-row span:last-child {
+    color: #ffffff;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.approval-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.approval-edit-pane {
+    display: none;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+/* INSPECTOR INTERNAL STYLES */
+.trace-step-item {
+    background: rgba(18, 14, 32, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-left: 2.5px solid var(--accent-purple);
+    border-radius: 9px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    transition: all 0.15s ease;
+}
+
+.trace-step-item:hover {
+    border-color: rgba(139, 92, 246, 0.35);
+    background: rgba(24, 18, 42, 0.85);
+}
+
+.trace-step-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.trace-step-detail {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.35;
+}
+
+.inspector-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 10px;
+    background: rgba(18, 14, 32, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    margin-bottom: 5px;
+    font-size: 11.5px;
+    transition: border-color 0.15s ease;
+}
+
+.inspector-meta-row:hover {
+    border-color: rgba(139, 92, 246, 0.25);
+}
+
+.inspector-meta-label {
+    color: var(--text-secondary);
+    font-size: 11px;
+}
+
+.inspector-meta-value {
+    color: #f1f5f9;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+}
+
+#inspector-log-stream {
+    background: rgba(10, 8, 18, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 9px;
+    height: calc(100% - 28px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.log-entry {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    line-height: 1.45;
+    padding: 5px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    word-break: break-all;
+}
+
+.log-entry.info { color: #94a3b8; }
+.log-entry.warn { color: #f59e0b; }
+.log-entry.action { color: #c4b5fd; }
+.log-entry.success { color: #4ade80; }
+
+/* MODALS */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-top: 1px solid var(--border-top-highlight);
+    border-radius: 18px;
+    width: 100%;
+    max-width: 480px;
+    padding: 22px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(20px);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.modal-title {
+    font-weight: 800;
+    font-size: 15px;
+    color: #ffffff;
+}
+
+.modal-close {
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.modal-close:hover {
+    color: #ffffff;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1100px) {
+    .inspector-panel { width: 300px; }
+    .metrics-row { grid-template-columns: repeat(2, 1fr); }
+    .system-status-grid { grid-template-columns: repeat(2, 1fr); }
+    .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 900px) {
+    .inspector-panel { position: absolute; right: 0; top: 0; z-index: 50; }
+    .sidebar { width: 210px; }
+}
+
+@media (max-width: 680px) {
+    .sidebar { display: none; }
+    .workspace-content { padding: 18px; }
+    .top-header { padding: 0 16px; }
+    .metrics-row { grid-template-columns: 1fr; }
+    .system-status-grid { grid-template-columns: 1fr; }
+    .dashboard-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+    <!-- 1. SIDEBAR (LEFT) -->
+    <aside class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">✦</div>
+            <span>Multi-Agent Assistant</span>
+        </div>
+
+        <button class="new-chat-btn" onclick="startNewChat()">
+            <span>＋</span> New Chat
+        </button>
+
+        <div class="nav-section-title">WORKSPACES</div>
+
+        <nav class="nav-menu">
+            <button class="nav-item active" data-nav="dashboard" onclick="switchPage('dashboard')">
+                <span class="nav-icon">⌂</span>
+                <span>Dashboard</span>
+            </button>
+            <button class="nav-item" data-nav="chat" onclick="switchPage('chat')">
+                <span class="nav-icon">✦</span>
+                <span>Chat</span>
+            </button>
+            <button class="nav-item" data-nav="documents" onclick="switchPage('documents')">
+                <span class="nav-icon">▣</span>
+                <span>Documents</span>
+            </button>
+            <button class="nav-item" data-nav="github" onclick="switchPage('github')">
+                <span class="nav-icon">◉</span>
+                <span>GitHub</span>
+            </button>
+            <button class="nav-item" data-nav="calendar" onclick="switchPage('calendar')">
+                <span class="nav-icon">□</span>
+                <span>Calendar</span>
+            </button>
+            <button class="nav-item" data-nav="email" onclick="switchPage('email')">
+                <span class="nav-icon">✉</span>
+                <span>Email</span>
+            </button>
+            <button class="nav-item" data-nav="scheduled" onclick="switchPage('scheduled')">
+                <span class="nav-icon">◷</span>
+                <span>Scheduled Emails</span>
+            </button>
+        </nav>
+
+        <div class="sidebar-recent-section">
+            <div class="nav-section-title" id="sidebar-recent-title">SUPERVISOR CHATS</div>
+            <div id="sidebar-recent-list" class="sidebar-recent-list">
+                <div style="padding:10px; color:var(--text-muted); font-size:12px;">Loading chats...</div>
+            </div>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="system-status-indicator">
+                <span class="status-dot" id="sidebar-status-dot"></span>
+                <span id="sidebar-status-text">Connected</span>
+            </div>
+            <button class="settings-btn" onclick="openApiKeyModal()" title="API Key Settings">⚙</button>
+        </div>
+    </aside>
+
+    <!-- 2. MAIN WORKSPACE (CENTER) -->
+    <main class="main-viewport">
+        <!-- TOP HEADER -->
+        <header class="top-header">
+            <div class="header-left">
+                <h1 class="header-title" id="top-header-title">Dashboard</h1>
+                <span class="thread-badge" id="current-thread-id">default</span>
+            </div>
+
+            <div class="header-right">
+                <div class="ai-active-pill">
+                    <span>✦</span>
+                    <span id="header-status-text">AI Active</span>
+                </div>
+                <button class="inspector-toggle-btn active" id="btn-toggle-inspector" onclick="toggleInspector()" title="Toggle Execution Inspector">
+                    <span>◨</span>
+                    <span>Inspector</span>
+                </button>
+                <button class="btn sm" onclick="openApiKeyModal()" title="Settings">⚙</button>
+            </div>
+        </header>
+
+        <!-- DEDICATED WORKSPACES CONTAINER -->
+        <div class="workspace-viewport">
+
+            <!-- 1. DASHBOARD WORKSPACE -->
+            <div id="workspace-dashboard" class="workspace active">
+                <div class="workspace-content">
+                    <div class="page-title">Welcome to your AI workspace</div>
+                    <div class="page-subtitle">Real-time status, subsystem telemetry, and multi-agent operations.</div>
+
+                    <!-- 4 REAL METRIC CARDS -->
+                    <div class="metrics-row">
+                        <!-- Card 1: Indexed Knowledge -->
+                        <div class="metric-card">
+                            <div class="metric-card-top">
+                                <div class="metric-icon-box">▣</div>
+                                <span class="metric-trend">RAG Vector DB</span>
+                            </div>
+                            <div>
+                                <div class="metric-label">Indexed Documents</div>
+                                <div class="metric-value-row">
+                                    <span class="metric-value" id="dash-doc-count">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Scheduled Queue -->
+                        <div class="metric-card">
+                            <div class="metric-card-top">
+                                <div class="metric-icon-box" style="color:#c084fc;">◷</div>
+                                <span class="metric-trend" style="color:#c084fc; background:var(--accent-soft);">Queue</span>
+                            </div>
+                            <div>
+                                <div class="metric-label">Scheduled Queue</div>
+                                <div class="metric-value-row">
+                                    <span class="metric-value" id="dash-sched-count">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Active Conversations -->
+                        <div class="metric-card">
+                            <div class="metric-card-top">
+                                <div class="metric-icon-box" style="color:#38bdf8;">✦</div>
+                                <span class="metric-trend" style="color:#38bdf8; background:rgba(6, 182, 212, 0.15);">Checkpointed</span>
+                            </div>
+                            <div>
+                                <div class="metric-label">Conversations</div>
+                                <div class="metric-value-row">
+                                    <span class="metric-value" id="dash-thread-count">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 4: Subsystems -->
+                        <div class="metric-card">
+                            <div class="metric-card-top">
+                                <div class="metric-icon-box" style="color:#f472b6;">◉</div>
+                                <span class="metric-trend" style="color:#f472b6; background:rgba(236, 72, 153, 0.15);">Active</span>
+                            </div>
+                            <div>
+                                <div class="metric-label">Subsystems</div>
+                                <div class="metric-value-row">
+                                    <span class="metric-value" id="dash-subsystems-count">6 / 6</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- REAL SUBSYSTEM STATUS MATRIX -->
+                    <div style="font-weight:700; font-size:13.5px; margin-bottom:12px; color:#ffffff;">Subsystem Status</div>
+                    <div class="system-status-grid" id="dash-subsystem-grid">
+                        <div class="list-item" style="padding:12px 16px; background:var(--bg-card); border-radius:12px;"><span>Gemini LLM</span><span class="badge">Checking...</span></div>
+                        <div class="list-item" style="padding:12px 16px; background:var(--bg-card); border-radius:12px;"><span>GitHub API</span><span class="badge">Checking...</span></div>
+                        <div class="list-item" style="padding:12px 16px; background:var(--bg-card); border-radius:12px;"><span>Google Calendar</span><span class="badge">Checking...</span></div>
+                        <div class="list-item" style="padding:12px 16px; background:var(--bg-card); border-radius:12px;"><span>Gmail Service</span><span class="badge">Checking...</span></div>
+                        <div class="list-item" style="padding:12px 16px; background:var(--bg-card); border-radius:12px;"><span>Pinecone RAG</span><span class="badge">Checking...</span></div>
+                        <div class="list-item" style="padding:12px 16px; background:var(--bg-card); border-radius:12px;"><span>SQLite Checkpointer</span><span class="badge">Checking...</span></div>
+                    </div>
+
+                    <!-- Navigation shortcuts -->
+                    <div style="font-weight:700; font-size:13.5px; margin-bottom:12px; color:#ffffff;">Dedicated Capabilities</div>
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card" onclick="switchPage('chat')">
+                            <div class="dashboard-card-icon">✦</div>
+                            <h3>Chat</h3>
+                            <p>Multi-agent conversation with human-in-the-loop approval protection.</p>
+                        </div>
+                        <div class="dashboard-card" onclick="switchPage('documents')">
+                            <div class="dashboard-card-icon">▣</div>
+                            <h3>Documents</h3>
+                            <p>Ingest PDFs into Pinecone and query knowledge with verified citations.</p>
+                        </div>
+                        <div class="dashboard-card" onclick="switchPage('github')">
+                            <div class="dashboard-card-icon">◉</div>
+                            <h3>GitHub</h3>
+                            <p>Search repositories, view issues, inspect pull requests and commits.</p>
+                        </div>
+                        <div class="dashboard-card" onclick="switchPage('calendar')">
+                            <div class="dashboard-card-icon">□</div>
+                            <h3>Calendar</h3>
+                            <p>View upcoming schedule, query free slots, and manage meetings.</p>
+                        </div>
+                        <div class="dashboard-card" onclick="switchPage('email')">
+                            <div class="dashboard-card-icon">✉</div>
+                            <h3>Email</h3>
+                            <p>Read inbox, draft messages, and dispatch with human confirmation.</p>
+                        </div>
+                        <div class="dashboard-card" onclick="switchPage('scheduled')">
+                            <div class="dashboard-card-icon">◷</div>
+                            <h3>Scheduled Emails</h3>
+                            <p>Inspect queued deliveries and cancel pending dispatches safely.</p>
+                        </div>
+                    </div>
+
+                    <!-- Recent Threads on Dashboard -->
+                    <div class="glass-panel">
+                        <div class="glass-panel-header">
+                            <span class="glass-panel-title">Recent Conversations</span>
+                            <button class="btn sm" onclick="startNewChat()">+ New Chat</button>
+                        </div>
+                        <div id="dash-recent-threads-list">
+                            <div style="padding:22px; color:var(--text-secondary); font-size:13px;">Loading conversations...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. CHAT WORKSPACE -->
+            <div id="workspace-chat" class="workspace">
+                <div class="chat-container">
+                    <div class="chat-thread-bar">
+                        <div class="chat-thread-title">
+                            <span>Thread: </span>
+                            <strong id="chat-thread-label" style="color:#ffffff;">default</strong>
+                        </div>
+                        <button class="btn sm" onclick="startNewChat()">＋ New Conversation</button>
+                    </div>
+
+                    <div class="chat-messages-scroll" id="chat-messages">
+                        <!-- Chat messages & HITL approvals dynamically rendered strictly here -->
+                    </div>
+
+                    <div class="chat-input-container">
+                        <div class="chat-input-box">
+                            <textarea id="chat-textarea" class="chat-textarea" placeholder="Ask your assistant anything (Enter to send, Shift+Enter for newline)..." rows="1" onkeydown="handleChatKeydown(event)"></textarea>
+                            <button class="send-btn" id="btn-chat-send" onclick="handleSendChat()" title="Send message">↑</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. DOCUMENTS WORKSPACE -->
+            <div id="workspace-documents" class="workspace">
+                <div class="workspace-content">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <div>
+                            <div class="page-title">Documents</div>
+                            <div class="page-subtitle" style="margin-bottom:0;">Private knowledge base &amp; hybrid RAG retrieval.</div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <input type="file" id="pdf-file-input" accept=".pdf" style="display:none;" onchange="handleFileSelected(event)">
+                            <button class="btn" onclick="startNewWorkspaceChat('documents')">＋ New RAG Chat</button>
+                            <button class="btn primary" onclick="document.getElementById('pdf-file-input').click()">＋ Upload PDF</button>
+                        </div>
+                    </div>
+
+                    <!-- Document list -->
+                    <div class="glass-panel" style="margin-bottom:18px;">
+                        <div class="glass-panel-header">
+                            <span class="glass-panel-title">Indexed Documents</span>
+                            <span class="badge" id="docs-count-badge">0 documents</span>
+                        </div>
+                        <div id="documents-list-container">
+                            <div style="padding:20px; color:var(--text-secondary); font-size:13px;">Loading documents...</div>
+                        </div>
+                    </div>
+
+                    <!-- Dedicated RAG Agent Conversation Workspace -->
+                    <div class="agent-chat-panel">
+                        <div class="agent-chat-header">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span style="font-weight:700; font-size:13.5px; color:#ffffff;">RAG Agent Console</span>
+                                <span class="badge" id="doc-thread-badge">doc_active</span>
+                            </div>
+                            <button class="btn sm" onclick="startNewWorkspaceChat('documents')">＋ New Discussion</button>
+                        </div>
+
+                        <div class="agent-chat-messages" id="doc-chat-messages">
+                            <!-- Messages dynamically rendered here -->
+                        </div>
+
+                        <div class="agent-chat-input-bar">
+                            <div class="chat-input-box">
+                                <textarea id="doc-chat-textarea" class="chat-textarea" placeholder="Ask your documents (e.g. types of Trees in Data Structures)..." rows="1" onkeydown="handleWorkspaceChatKeydown(event, 'documents')"></textarea>
+                                <button class="send-btn" id="btn-doc-chat-send" onclick="handleSendWorkspaceChat('documents')" title="Search &amp; Answer">↑</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. GITHUB WORKSPACE -->
+            <div id="workspace-github" class="workspace">
+                <div class="workspace-content">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <div>
+                            <div class="page-title">GitHub</div>
+                            <div class="page-subtitle" style="margin-bottom:0;">Search repositories, explore open issues, pull requests, and commits.</div>
+                        </div>
+                        <button class="btn sm" onclick="startNewWorkspaceChat('github')">＋ New GitHub Chat</button>
+                    </div>
+
+                    <div class="input-row" style="margin-top:14px;">
+                        <input type="text" id="github-search-input" placeholder="Search repositories or user (e.g. user:abdullahnadeem215)..." onkeydown="if(event.key==='Enter') handleSearchGithub()">
+                        <button class="btn primary" id="btn-github-search" onclick="handleSearchGithub()" style="white-space:nowrap;">Search</button>
+                    </div>
+
+                    <div class="glass-panel" id="github-panel" style="margin-bottom:18px;">
+                        <div class="glass-panel-header">
+                            <span class="glass-panel-title" id="github-panel-title">Repositories</span>
+                            <span class="badge neutral" id="github-count-badge">0 found</span>
+                        </div>
+                        <div id="github-results-container">
+                            <div style="padding:20px; color:var(--text-secondary); font-size:13px;">Enter a query above to search GitHub.</div>
+                        </div>
+                    </div>
+
+                    <!-- Dedicated GitHub Agent Conversation Workspace -->
+                    <div class="agent-chat-panel">
+                        <div class="agent-chat-header">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span style="font-weight:700; font-size:13.5px; color:#ffffff;">GitHub Agent Console</span>
+                                <span class="badge neutral" id="git-thread-badge">git_active</span>
+                            </div>
+                            <button class="btn sm" onclick="startNewWorkspaceChat('github')">＋ New Discussion</button>
+                        </div>
+
+                        <div class="agent-chat-messages" id="git-chat-messages">
+                            <!-- Messages dynamically rendered here -->
+                        </div>
+
+                        <div class="agent-chat-input-bar">
+                            <div class="chat-input-box">
+                                <textarea id="git-chat-textarea" class="chat-textarea" placeholder="Ask GitHub agent (e.g. show my repositories, show issues for the first one)..." rows="1" onkeydown="handleWorkspaceChatKeydown(event, 'github')"></textarea>
+                                <button class="send-btn" id="btn-git-chat-send" onclick="handleSendWorkspaceChat('github')" title="Send query">↑</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. CALENDAR WORKSPACE -->
+            <div id="workspace-calendar" class="workspace">
+                <div class="workspace-content">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <div>
+                            <div class="page-title">Calendar</div>
+                            <div class="page-subtitle" style="margin-bottom:0;">View events, check free slots, and manage your schedule.</div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn sm" onclick="startNewWorkspaceChat('calendar')">＋ New Calendar Chat</button>
+                            <button class="btn" onclick="toggleFreeSlotsPanel()">Find Free Slots</button>
+                            <button class="btn primary" onclick="openCreateEventModal()">＋ Create Event</button>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel" id="calendar-free-slots-panel" style="display:none; padding:18px; margin-top:14px;">
+                        <div class="glass-panel-title" style="margin-bottom:10px;">Find Available Free Slots</div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr 110px auto; gap:10px; margin-bottom:12px;">
+                            <div>
+                                <label style="font-size:11px; color:var(--text-secondary); display:block; margin-bottom:4px;">Start Date</label>
+                                <input type="datetime-local" id="slot-start-date">
+                            </div>
+                            <div>
+                                <label style="font-size:11px; color:var(--text-secondary); display:block; margin-bottom:4px;">End Date</label>
+                                <input type="datetime-local" id="slot-end-date">
+                            </div>
+                            <div>
+                                <label style="font-size:11px; color:var(--text-secondary); display:block; margin-bottom:4px;">Duration</label>
+                                <select id="slot-duration">
+                                    <option value="15">15 min</option>
+                                    <option value="30" selected>30 min</option>
+                                    <option value="45">45 min</option>
+                                    <option value="60">60 min</option>
+                                </select>
+                            </div>
+                            <div style="display:flex; align-items:flex-end;">
+                                <button class="btn primary" onclick="handleFindFreeSlotsAction()">Find</button>
+                            </div>
+                        </div>
+                        <div id="calendar-free-slots-results"></div>
+                    </div>
+
+                    <div class="glass-panel" style="margin-top:14px; margin-bottom:18px;">
+                        <div class="glass-panel-header">
+                            <span class="glass-panel-title">Upcoming Events</span>
+                            <span class="badge" id="calendar-tz-badge">Asia/Karachi</span>
+                        </div>
+                        <div id="calendar-events-container">
+                            <div style="padding:20px; color:var(--text-secondary); font-size:13px;">Loading events...</div>
+                        </div>
+                    </div>
+
+                    <!-- Dedicated Calendar Agent Conversation Workspace -->
+                    <div class="agent-chat-panel">
+                        <div class="agent-chat-header">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span style="font-weight:700; font-size:13.5px; color:#ffffff;">Calendar Agent Console</span>
+                                <span class="badge" id="cal-thread-badge">cal_active</span>
+                            </div>
+                            <button class="btn sm" onclick="startNewWorkspaceChat('calendar')">＋ New Discussion</button>
+                        </div>
+
+                        <div class="agent-chat-messages" id="cal-chat-messages">
+                            <!-- Messages dynamically rendered here -->
+                        </div>
+
+                        <div class="agent-chat-input-bar">
+                            <div class="chat-input-box">
+                                <textarea id="cal-chat-textarea" class="chat-textarea" placeholder="Ask Calendar agent (e.g. what meetings do I have tomorrow, which one is at 4 PM)..." rows="1" onkeydown="handleWorkspaceChatKeydown(event, 'calendar')"></textarea>
+                                <button class="send-btn" id="btn-cal-chat-send" onclick="handleSendWorkspaceChat('calendar')" title="Send query">↑</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. EMAIL WORKSPACE -->
+            <div id="workspace-email" class="workspace">
+                <div class="workspace-content">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <div>
+                            <div class="page-title">Email</div>
+                            <div class="page-subtitle" style="margin-bottom:0;">Inbox inspection, email search, and draft management.</div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn sm" onclick="startNewWorkspaceChat('email')">＋ New Email Chat</button>
+                            <button class="btn primary" onclick="openComposeEmailModal()">＋ Compose</button>
+                        </div>
+                    </div>
+
+                    <div class="input-row" style="margin-top:14px;">
+                        <input type="text" id="email-search-input" placeholder="Search emails (e.g. from:someone, subject:...)..." onkeydown="if(event.key==='Enter') handleSearchEmailsAction()">
+                        <button class="btn" onclick="handleSearchEmailsAction()">Search</button>
+                    </div>
+
+                    <div class="glass-panel" style="margin-bottom:18px;">
+                        <div class="glass-panel-header">
+                            <span class="glass-panel-title" id="email-panel-title">Inbox</span>
+                            <span class="badge neutral" id="email-count-badge">0 messages</span>
+                        </div>
+                        <div id="email-list-container">
+                            <div style="padding:20px; color:var(--text-secondary); font-size:13px;">Loading messages...</div>
+                        </div>
+                    </div>
+
+                    <!-- Dedicated Email Agent Conversation Workspace -->
+                    <div class="agent-chat-panel">
+                        <div class="agent-chat-header">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span style="font-weight:700; font-size:13.5px; color:#ffffff;">Email Agent Console</span>
+                                <span class="badge" id="mail-thread-badge">mail_active</span>
+                            </div>
+                            <button class="btn sm" onclick="startNewWorkspaceChat('email')">＋ New Discussion</button>
+                        </div>
+
+                        <div class="agent-chat-messages" id="mail-chat-messages">
+                            <!-- Messages dynamically rendered here -->
+                        </div>
+
+                        <div class="agent-chat-input-bar">
+                            <div class="chat-input-box">
+                                <textarea id="mail-chat-textarea" class="chat-textarea" placeholder="Ask Email agent (e.g. draft an email to ..., search emails)..." rows="1" onkeydown="handleWorkspaceChatKeydown(event, 'email')"></textarea>
+                                <button class="send-btn" id="btn-mail-chat-send" onclick="handleSendWorkspaceChat('email')" title="Send query">↑</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. SCHEDULED EMAILS WORKSPACE -->
+            <div id="workspace-scheduled" class="workspace">
+                <div class="workspace-content">
+                    <div class="page-title">Scheduled Emails</div>
+                    <div class="page-subtitle">Inspect automated email queue and cancel pending dispatches.</div>
+
+                    <div class="tabs-bar" id="scheduled-tabs">
+                        <button class="tab-btn active" onclick="filterScheduledEmails('all')">All</button>
+                        <button class="tab-btn" onclick="filterScheduledEmails('pending')">Pending</button>
+                        <button class="tab-btn" onclick="filterScheduledEmails('sent')">Sent</button>
+                        <button class="tab-btn" onclick="filterScheduledEmails('cancelled')">Cancelled</button>
+                        <button class="tab-btn" onclick="filterScheduledEmails('failed')">Failed</button>
+                    </div>
+
+                    <div class="glass-panel">
+                        <div class="glass-panel-header">
+                            <span class="glass-panel-title">Delivery Queue</span>
+                            <span class="badge" id="scheduled-count-badge">0 records</span>
+                        </div>
+                        <div id="scheduled-emails-container">
+                            <div style="padding:20px; color:var(--text-secondary); font-size:13px;">Loading queue...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- 3. EXECUTION INSPECTOR (RIGHT) -->
+    <aside class="inspector-panel" id="execution-inspector">
+        <div class="inspector-header">
+            <div class="inspector-title">
+                <span class="live-indicator"></span>
+                <span>EXECUTION INSPECTOR</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+                <span class="badge neutral" id="inspector-status-badge">READY</span>
+                <button class="inspector-close-btn" onclick="toggleInspector()" title="Collapse Inspector">✕</button>
+            </div>
+        </div>
+
+        <div class="inspector-tabs">
+            <button class="inspector-tab active" data-tab="trace" onclick="switchInspectorTab('trace')">Trace</button>
+            <button class="inspector-tab" data-tab="details" onclick="switchInspectorTab('details')">Details</button>
+            <button class="inspector-tab" data-tab="tokens" onclick="switchInspectorTab('tokens')">Tokens</button>
+            <button class="inspector-tab" data-tab="tools" onclick="switchInspectorTab('tools')">Tools</button>
+            <button class="inspector-tab" data-tab="mcp" onclick="switchInspectorTab('mcp')">MCP</button>
+            <button class="inspector-tab" data-tab="logs" onclick="switchInspectorTab('logs')">Logs</button>
+        </div>
+
+        <div class="inspector-body">
+            <!-- 1. TRACE PANE -->
+            <div class="inspector-pane active" id="pane-trace">
+                <div class="inspector-section-label">Execution Graph Pipeline</div>
+                <div id="inspector-trace-list">
+                    <div class="inspector-empty-card">
+                        <div class="empty-node-glyph">◈</div>
+                        <div class="empty-card-title">Pipeline Idle</div>
+                        <div class="empty-card-sub">No graph execution on this thread yet. Send a prompt to stream live LangGraph node transitions and tool calls.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. DETAILS PANE -->
+            <div class="inspector-pane" id="pane-details">
+                <div class="inspector-section-label">Active Context &amp; Intent</div>
+                <div class="inspector-meta-row">
+                    <span class="inspector-meta-label">Intent</span>
+                    <span class="inspector-meta-value" id="detail-intent">general</span>
+                </div>
+                <div class="inspector-meta-row">
+                    <span class="inspector-meta-label">Workflow</span>
+                    <span class="inspector-meta-value" id="detail-workflow">None</span>
+                </div>
+                <div class="inspector-meta-row">
+                    <span class="inspector-meta-label">Approval Risk</span>
+                    <span class="inspector-meta-value" id="detail-risk">low</span>
+                </div>
+                <div class="inspector-meta-row">
+                    <span class="inspector-meta-label">Target Username</span>
+                    <span class="inspector-meta-value" id="detail-target-user">None</span>
+                </div>
+                <div class="inspector-meta-row">
+                    <span class="inspector-meta-label">Active Thread</span>
+                    <span class="inspector-meta-value" id="detail-thread-id" style="max-width:140px; overflow:hidden; text-overflow:ellipsis;">default</span>
+                </div>
+                <div style="margin-top:12px;">
+                    <div class="inspector-section-label">Context Artifacts</div>
+                    <div id="detail-artifacts-json" style="background:rgba(10,8,18,0.85); border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:10px; font-family:'JetBrains Mono', monospace; font-size:10.5px; color:#cbd5e1; max-height:160px; overflow-y:auto; white-space:pre-wrap;">{}</div>
+                </div>
+            </div>
+
+            <!-- 3. TOKENS PANE -->
+            <div class="inspector-pane" id="pane-tokens">
+                <div class="inspector-section-label">Model &amp; Compute Telemetry</div>
+                <div class="inspector-meta-row">
+                    <span class="inspector-meta-label">Configured Model</span>
+                    <span class="inspector-meta-value" id="tokens-model">gemini-3.8-flash</span>
+                </div>
+                <div class="inspector-meta-row">
+                    <span class="inspector-meta-label">Turnaround Latency</span>
+                    <span class="inspector-meta-value" id="tokens-latency">0 ms</span>
+                </div>
+                <div class="inspector-meta-row">
+                    <span class="inspector-meta-label">Execution Status</span>
+                    <span class="inspector-meta-value" id="tokens-status">idle</span>
+                </div>
+                <div class="inspector-meta-row">
+                    <span class="inspector-meta-label">Checkpointer</span>
+                    <span class="inspector-meta-value">SQLite (WAL)</span>
+                </div>
+                <div class="inspector-meta-row">
+                    <span class="inspector-meta-label">Active Timezone</span>
+                    <span class="inspector-meta-value">Asia/Karachi</span>
+                </div>
+            </div>
+
+            <!-- 4. TOOLS PANE -->
+            <div class="inspector-pane" id="pane-tools">
+                <div class="inspector-section-label">Registered FastMCP Tools</div>
+                <div id="inspector-tools-list" style="display:flex; flex-direction:column; gap:6px;">
+                    <div class="trace-step-item">
+                        <div class="trace-step-header"><span>search_repositories</span><span class="badge neutral">GitHub</span></div>
+                        <div class="trace-step-detail">Paginated search across users and topics</div>
+                    </div>
+                    <div class="trace-step-item">
+                        <div class="trace-step-header"><span>list_events</span><span class="badge neutral">Calendar</span></div>
+                        <div class="trace-step-detail">Timezone-aware Google Calendar events list</div>
+                    </div>
+                    <div class="trace-step-item">
+                        <div class="trace-step-header"><span>find_free_slots</span><span class="badge neutral">Calendar</span></div>
+                        <div class="trace-step-detail">Non-conflicting interval calculator</div>
+                    </div>
+                    <div class="trace-step-item">
+                        <div class="trace-step-header"><span>search_documents</span><span class="badge neutral">RAG</span></div>
+                        <div class="trace-step-detail">Hybrid dense + BM25 search with citations</div>
+                    </div>
+                    <div class="trace-step-item">
+                        <div class="trace-step-header"><span>send_email</span><span class="badge pending">HITL</span></div>
+                        <div class="trace-step-detail">Gmail send requiring human interrupt() approval</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. MCP PANE -->
+            <div class="inspector-pane" id="pane-mcp">
+                <div class="inspector-section-label">MCP Subsystem Health</div>
+                <div id="inspector-mcp-list" style="display:flex; flex-direction:column; gap:6px;">
+                    <div class="inspector-meta-row">
+                        <span>FastMCP Calendar</span><span class="badge" id="mcp-cal-badge">Connected</span>
+                    </div>
+                    <div class="inspector-meta-row">
+                        <span>FastMCP Gmail</span><span class="badge" id="mcp-mail-badge">Connected</span>
+                    </div>
+                    <div class="inspector-meta-row">
+                        <span>FastMCP GitHub</span><span class="badge" id="mcp-git-badge">Connected</span>
+                    </div>
+                    <div class="inspector-meta-row">
+                        <span>Pinecone Vector RAG</span><span class="badge" id="mcp-rag-badge">Connected</span>
+                    </div>
+                    <div class="inspector-meta-row">
+                        <span>LangGraph SQLite</span><span class="badge">Connected</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. LOGS PANE -->
+            <div class="inspector-pane" id="pane-logs">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <div class="inspector-section-label" style="margin-bottom:0;">Event Stream</div>
+                    <button class="btn sm" onclick="clearInspectorLogs()" style="font-size:10px; padding:2px 7px;">Clear</button>
+                </div>
+                <div id="inspector-log-stream">
+                    <div class="log-entry info">[system] Assistant UI initialized</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+</div>
+
+<!-- MODALS -->
+
+<!-- Compose Email Modal -->
+<div class="modal-overlay" id="compose-modal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div class="modal-title">Compose Email</div>
+            <div class="modal-close" onclick="closeComposeEmailModal()">✕</div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <input type="email" id="compose-to" placeholder="To (e.g. client@example.com)">
+            <input type="text" id="compose-subject" placeholder="Subject">
+            <textarea id="compose-body" rows="6" placeholder="Message content..."></textarea>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+                <span style="font-size:11px; color:var(--text-secondary);">Emails require human confirmation before sending.</span>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn" onclick="handleSaveDraftOnly()">Save Draft</button>
+                    <button class="btn primary" onclick="handleSendEmailAction()">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Event Modal -->
+<div class="modal-overlay" id="event-modal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div class="modal-title">Create Calendar Event</div>
+            <div class="modal-close" onclick="closeCreateEventModal()">✕</div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <input type="text" id="event-title" placeholder="Event title">
+            <input type="datetime-local" id="event-start">
+            <div class="input-row" style="margin-bottom:0;">
+                <input type="text" id="event-duration" placeholder="Duration (e.g. 30 minutes)" value="30 minutes">
+                <input type="text" id="event-tz" value="Asia/Karachi" readonly style="color:var(--text-secondary);">
+            </div>
+            <textarea id="event-desc" rows="3" placeholder="Description / Agenda"></textarea>
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:6px;">
+                <button class="btn" onclick="closeCreateEventModal()">Cancel</button>
+                <button class="btn primary" onclick="handleCreateEventSubmit()">Create Event</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Settings & API Key Modal -->
+<div class="modal-overlay" id="api-key-modal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div class="modal-title">API Settings</div>
+            <div class="modal-close" onclick="closeApiKeyModal()">✕</div>
+        </div>
+        <div style="font-size:13px; color:var(--text-secondary); margin-bottom:14px; line-height:1.5;">
+            Configure client <code>X-API-Key</code> if protected by backend.
+        </div>
+        <input type="text" id="api-key-input" placeholder="Enter API Key...">
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
+            <button class="btn" onclick="closeApiKeyModal()">Cancel</button>
+            <button class="btn primary" onclick="saveApiKey()">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- JAVASCRIPT APPLICATION -->
+<script>
+    // --- 1. Router & Central State ---
+    const WORKSPACES = ["dashboard", "chat", "documents", "github", "calendar", "email", "scheduled"];
+    let currentPage = "dashboard";
+
+    const API_BASE = (window.location.protocol === "file:" || !window.location.port) 
+      ? "http://127.0.0.1:8000" 
+      : "";
+
+    const WORKSPACE_CONFIG = {
+      chat: {
+        prefix: "chat_",
+        agentType: null,
+        containerId: "chat-messages",
+        badgeId: "chat-thread-label",
+        textareaId: "chat-textarea",
+        sendBtnId: "btn-chat-send"
+      },
+      documents: {
+        prefix: "doc_",
+        agentType: "rag",
+        containerId: "doc-chat-messages",
+        badgeId: "doc-thread-badge",
+        textareaId: "doc-chat-textarea",
+        sendBtnId: "btn-doc-chat-send"
+      },
+      github: {
+        prefix: "git_",
+        agentType: "github",
+        containerId: "git-chat-messages",
+        badgeId: "git-thread-badge",
+        textareaId: "git-chat-textarea",
+        sendBtnId: "btn-git-chat-send"
+      },
+      calendar: {
+        prefix: "cal_",
+        agentType: "calendar",
+        containerId: "cal-chat-messages",
+        badgeId: "cal-thread-badge",
+        textareaId: "cal-chat-textarea",
+        sendBtnId: "btn-cal-chat-send"
+      },
+      email: {
+        prefix: "mail_",
+        agentType: "email",
+        containerId: "mail-chat-messages",
+        badgeId: "mail-thread-badge",
+        textareaId: "mail-chat-textarea",
+        sendBtnId: "btn-mail-chat-send"
+      },
+    };
+
+    const WORKSPACE_TITLES = {
+      chat: "SUPERVISOR CHATS",
+      documents: "DOCUMENTS CHATS",
+      github: "GITHUB CHATS",
+      calendar: "CALENDAR CHATS",
+      email: "EMAIL CHATS",
+      dashboard: "ALL RECENT CHATS",
+      scheduled: "ALL RECENT CHATS"
+    };
+
+    const workspaceThreads = {
+      chat: sessionStorage.getItem("thread_chat") || sessionStorage.getItem("active_thread_id") || ("chat_" + Math.random().toString(36).substring(2, 10)),
+      documents: sessionStorage.getItem("thread_documents") || ("doc_" + Math.random().toString(36).substring(2, 10)),
+      github: sessionStorage.getItem("thread_github") || ("git_" + Math.random().toString(36).substring(2, 10)),
+      calendar: sessionStorage.getItem("thread_calendar") || ("cal_" + Math.random().toString(36).substring(2, 10)),
+      email: sessionStorage.getItem("thread_email") || ("mail_" + Math.random().toString(36).substring(2, 10)),
+    };
+
+    const loadedThreadHistories = new Set();
+    let allScheduledRecords = [];
+    let currentGithubRepos = [];
+    let activeGithubRepo = null;
+
+    function getActiveThreadId() {
+      return workspaceThreads[currentPage] || workspaceThreads.chat;
+    }
+
+    function detectWorkspaceForThread(threadId) {
+      if (!threadId) return "chat";
+      if (threadId.startsWith("doc_")) return "documents";
+      if (threadId.startsWith("git_")) return "github";
+      if (threadId.startsWith("cal_")) return "calendar";
+      if (threadId.startsWith("mail_")) return "email";
+      if (threadId.startsWith("chat_")) return "chat";
+      if (currentPage && WORKSPACE_CONFIG[currentPage]) return currentPage;
+      return "chat";
+    }
+
+    function updateThreadDisplay() {
+      const activeId = getActiveThreadId();
+      const topEl = document.getElementById("current-thread-id");
+      if (topEl) topEl.innerText = activeId;
+      const det = document.getElementById("detail-thread-id");
+      if (det) det.innerText = activeId;
+
+      for (const [wsKey, cfg] of Object.entries(WORKSPACE_CONFIG)) {
+        const badge = document.getElementById(cfg.badgeId);
+        if (badge) badge.innerText = workspaceThreads[wsKey];
+      }
+    }
+    updateThreadDisplay();
+
+    // Authenticated API Wrapper
+    async function apiFetch(endpoint, options = {}) {
+      const url = endpoint.startsWith("http") ? endpoint : API_BASE + endpoint;
+      options.headers = options.headers || {};
+      const apiKey = sessionStorage.getItem("api_key");
+      if (apiKey) {
+        options.headers["X-API-Key"] = apiKey;
+      }
+
+      logInspector("INFO", `HTTP ${options.method || 'GET'} ${endpoint}`);
+
+      try {
+        const res = await fetch(url, options);
+        if (res.status === 401) {
+          openApiKeyModal();
+          throw new Error("Authentication required (X-API-Key)");
+        }
+        setOnlineStatus(true);
+        return res;
+      } catch (err) {
+        setOnlineStatus(false);
+        logInspector("WARN", `API call failed: ${err.message}`);
+        throw err;
+      }
+    }
+
+    function setOnlineStatus(online) {
+      const dot = document.getElementById("sidebar-status-dot");
+      const text = document.getElementById("sidebar-status-text");
+
+      if (online) {
+        if (dot) dot.className = "status-dot";
+        if (text) text.innerText = "Connected";
+      } else {
+        if (dot) dot.className = "status-dot offline";
+        if (text) text.innerText = "Offline";
+      }
+    }
+
+    // --- 2. Central Router Implementation ---
+    function switchPage(page) {
+      if (!WORKSPACES.includes(page)) page = "dashboard";
+      currentPage = page;
+
+      // Update sidebar nav active state
+      document.querySelectorAll(".nav-item").forEach(item => {
+        if (item.getAttribute("data-nav") === page) {
+          item.classList.add("active");
+        } else {
+          item.classList.remove("active");
+        }
+      });
+
+      // Update header title
+      const titleMap = {
+        "dashboard": "Dashboard",
+        "chat": "Chat",
+        "documents": "Documents",
+        "github": "GitHub",
+        "calendar": "Calendar",
+        "email": "Email",
+        "scheduled": "Scheduled Emails"
+      };
+      const titleEl = document.getElementById("top-header-title");
+      if (titleEl) titleEl.innerText = titleMap[page] || "Dashboard";
+
+      // Isolated Workspace display switching
+      WORKSPACES.forEach(w => {
+        const ws = document.getElementById("workspace-" + w);
+        if (ws) {
+          if (w === page) {
+            ws.classList.add("active");
+          } else {
+            ws.classList.remove("active");
+          }
+        }
+      });
+
+      updateThreadDisplay();
+      logInspector("STATE", `Workspace switched to [${page}]`);
+
+      // Workspace-specific data loading
+      if (page === "dashboard") loadDashboardWorkspace();
+      else if (page === "chat") {
+        loadWorkspaceHistory("chat", workspaceThreads.chat);
+        document.getElementById("chat-textarea")?.focus();
+      }
+      else if (page === "documents") {
+        loadDocumentsWorkspace();
+        loadWorkspaceHistory("documents", workspaceThreads.documents);
+      }
+      else if (page === "github") {
+        loadGithubWorkspace();
+        loadWorkspaceHistory("github", workspaceThreads.github);
+      }
+      else if (page === "calendar") {
+        loadCalendarWorkspace();
+        loadWorkspaceHistory("calendar", workspaceThreads.calendar);
+      }
+      else if (page === "email") {
+        loadEmailWorkspace();
+        loadWorkspaceHistory("email", workspaceThreads.email);
+      }
+      else if (page === "scheduled") loadScheduledWorkspace();
+
+      loadRecentChats();
+    }
+
+    // --- 3. Execution Inspector Controls ---
+    function toggleInspector() {
+      const panel = document.getElementById("execution-inspector");
+      const btn = document.getElementById("btn-toggle-inspector");
+      panel.classList.toggle("collapsed");
+      btn.classList.toggle("active");
+    }
+
+    function switchInspectorTab(tabName) {
+      document.querySelectorAll(".inspector-tab").forEach(t => {
+        if (t.getAttribute("data-tab") === tabName) t.classList.add("active");
+        else t.classList.remove("active");
+      });
+      document.querySelectorAll(".inspector-pane").forEach(p => {
+        if (p.id === "pane-" + tabName) p.classList.add("active");
+        else p.classList.remove("active");
+      });
+    }
+
+    function logInspector(level, msg) {
+      const stream = document.getElementById("inspector-log-stream");
+      if (!stream) return;
+      const d = document.createElement("div");
+      const time = new Date().toISOString().substring(11, 19);
+      d.className = `log-entry ${level.toLowerCase()}`;
+      d.innerText = `[${time}] [${level}] ${msg}`;
+      stream.appendChild(d);
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    function clearInspectorLogs() {
+      const stream = document.getElementById("inspector-log-stream");
+      if (stream) stream.innerHTML = "";
+    }
+
+    function resetInspectorState(threadId) {
+      const traceList = document.getElementById("inspector-trace-list");
+      if (traceList) {
+        traceList.innerHTML = `
+          <div class="inspector-empty-card">
+            <div class="empty-node-glyph">◈</div>
+            <div class="empty-card-title">Pipeline Idle</div>
+            <div class="empty-card-sub">No graph execution on this thread yet. Send a prompt to stream live LangGraph node transitions and tool calls.</div>
+          </div>
+        `;
+      }
+      const b = document.getElementById("inspector-status-badge");
+      if (b) {
+        b.innerText = "READY";
+        b.className = "badge neutral";
+      }
+      if (document.getElementById("detail-intent")) document.getElementById("detail-intent").innerText = "general";
+      if (document.getElementById("detail-workflow")) document.getElementById("detail-workflow").innerText = "None";
+      if (document.getElementById("detail-risk")) document.getElementById("detail-risk").innerText = "low";
+      if (document.getElementById("detail-target-user")) document.getElementById("detail-target-user").innerText = "None";
+      if (document.getElementById("detail-thread-id")) document.getElementById("detail-thread-id").innerText = threadId || getActiveThreadId();
+      if (document.getElementById("detail-artifacts-json")) document.getElementById("detail-artifacts-json").innerText = "{}";
+      if (document.getElementById("tokens-latency")) document.getElementById("tokens-latency").innerText = "0 ms";
+      if (document.getElementById("tokens-status")) document.getElementById("tokens-status").innerText = "idle";
+    }
+
+    function updateInspectorFromResponse(data, latencyMs) {
+      const badge = document.getElementById("inspector-status-badge");
+      if (badge) {
+        badge.innerText = data.status === "awaiting_approval" ? "INTERRUPTED" : "READY";
+        badge.className = data.status === "awaiting_approval" ? "badge pending" : "badge";
+      }
+
+      // Update trace
+      const traceList = document.getElementById("inspector-trace-list");
+      if (data.trace && data.trace.length > 0) {
+        traceList.innerHTML = data.trace.map((t, idx) => `
+          <div class="trace-step-item">
+            <div class="trace-step-header">
+              <span>${idx + 1}. ${escapeHtml(t.label || t.step)}</span>
+              <span class="badge ${t.status === 'awaiting_approval' ? 'pending' : (t.status === 'ok' ? '' : 'danger')}">${escapeHtml(t.status || 'OK')}</span>
+            </div>
+            <div class="trace-step-detail">${escapeHtml(t.detail || '')}</div>
+          </div>
+        `).join("");
+      } else {
+        traceList.innerHTML = `
+          <div class="inspector-empty-card">
+            <div class="empty-node-glyph">◈</div>
+            <div class="empty-card-title">Pipeline Idle</div>
+            <div class="empty-card-sub">No graph execution on this thread yet. Send a prompt to stream live LangGraph node transitions and tool calls.</div>
+          </div>
+        `;
+      }
+
+      // Update details
+      if (data.intent) document.getElementById("detail-intent").innerText = data.intent;
+      if (data.workflow) document.getElementById("detail-workflow").innerText = data.workflow;
+      if (data.artifacts) {
+        document.getElementById("detail-artifacts-json").innerText = JSON.stringify(data.artifacts, null, 2);
+        if (data.artifacts.target_username) {
+          document.getElementById("detail-target-user").innerText = data.artifacts.target_username;
+        }
+      }
+      if (data.pending_action && data.pending_action.risk) {
+        document.getElementById("detail-risk").innerText = data.pending_action.risk;
+      }
+      if (data.thread_id) {
+        document.getElementById("detail-thread-id").innerText = data.thread_id;
+      }
+
+      // Update tokens & model telemetry (real metrics only)
+      if (data.model) document.getElementById("tokens-model").innerText = data.model;
+      if (latencyMs !== undefined) document.getElementById("tokens-latency").innerText = `${latencyMs} ms`;
+      if (data.status) document.getElementById("tokens-status").innerText = data.status;
+    }
+
+    // --- 4. Recent Chats (Isolated Per Workspace) ---
+    async function loadRecentChats() {
+      const titleEl = document.getElementById("sidebar-recent-title");
+      if (titleEl) {
+        titleEl.innerText = WORKSPACE_TITLES[currentPage] || "RECENT CHATS";
+      }
+
+      const sidebarList = document.getElementById("sidebar-recent-list");
+      const dashRecent = document.getElementById("dash-recent-threads-list");
+
+      try {
+        const wsParam = (currentPage === "dashboard" || currentPage === "scheduled") 
+          ? "" 
+          : `?workspace=${encodeURIComponent(currentPage)}`;
+        
+        const res = await apiFetch(`/threads${wsParam}`);
+        if (!res.ok) return;
+        const threads = await res.json();
+
+        const activeId = getActiveThreadId();
+
+        if (!threads || threads.length === 0) {
+          if (sidebarList) sidebarList.innerHTML = `<div style="padding:10px; color:var(--text-muted); font-size:12px;">No ${currentPage} chats yet</div>`;
+          if (dashRecent && currentPage === "dashboard") {
+            dashRecent.innerHTML = `
+              <div class="empty-state">
+                <div class="empty-state-icon">✦</div>
+                <div class="empty-state-title">No conversations yet</div>
+                <div class="empty-state-desc">Start a conversation with your AI assistant to see your history here.</div>
+                <button class="btn primary sm" onclick="startNewChat()">Start Chat</button>
+              </div>
+            `;
+          }
+          return;
+        }
+
+        // Render Sidebar Recent Chats
+        if (sidebarList) {
+          sidebarList.innerHTML = threads.map(t => `
+            <div class="chat-item ${t.thread_id === activeId ? 'selected' : ''}" onclick="selectChatThread('${escapeHtml(t.thread_id)}')">
+              <span class="chat-item-text">${escapeHtml(t.title || t.thread_id)}</span>
+            </div>
+          `).join("");
+        }
+
+        // Render Dashboard Recent Conversations list
+        if (dashRecent && currentPage === "dashboard") {
+          dashRecent.innerHTML = threads.slice(0, 5).map(t => `
+            <div class="list-item" onclick="selectChatThread('${escapeHtml(t.thread_id)}')">
+              <div>
+                <div class="item-title">${escapeHtml(t.title || t.thread_id)}</div>
+                <div class="item-meta">${escapeHtml(t.last_message || 'Conversation active')}</div>
+              </div>
+              <button class="btn sm" onclick="event.stopPropagation(); selectChatThread('${escapeHtml(t.thread_id)}')">Open &rarr;</button>
+            </div>
+          `).join("");
+        }
+      } catch (err) {
+        console.warn("Recent chats load failed:", err.message);
+      }
+    }
+
+    async function selectChatThread(threadId) {
+      const targetWs = detectWorkspaceForThread(threadId);
+      workspaceThreads[targetWs] = threadId;
+      sessionStorage.setItem("thread_" + targetWs, threadId);
+
+      if (currentPage !== targetWs) {
+        switchPage(targetWs);
+      } else {
+        updateThreadDisplay();
+      }
+
+      await loadWorkspaceHistory(targetWs, threadId, true);
+      loadRecentChats();
+    }
+
+    function appendInitialWorkspaceGreeting(wsKey) {
+      const greetingMap = {
+        chat: "Supervisor Agent ready. How can I assist you today?",
+        documents: "RAG Specialist ready. Ask questions about your indexed documents.",
+        github: "GitHub Specialist ready. Ask about repositories, issues, PRs, or commits.",
+        calendar: "Calendar Specialist ready. Ask about your schedule or free slots.",
+        email: "Email Specialist ready. Ask to draft emails, search messages, or check inbox."
+      };
+      appendWorkspaceAssistantBubble(wsKey, greetingMap[wsKey] || "Agent ready.");
+    }
+
+    async function loadWorkspaceHistory(wsKey, threadId, force = false) {
+      const cfg = WORKSPACE_CONFIG[wsKey];
+      if (!cfg) return;
+      const container = document.getElementById(cfg.containerId);
+      if (!container) return;
+
+      if (!force && loadedThreadHistories.has(threadId)) {
+        return;
+      }
+
+      container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-secondary); font-size:12.5px;">Loading conversation history...</div>';
+
+      try {
+        const startT = performance.now();
+        const res = await apiFetch("/threads/" + encodeURIComponent(threadId));
+        const lat = Math.round(performance.now() - startT);
+        if (!res.ok) {
+          container.innerHTML = "";
+          appendInitialWorkspaceGreeting(wsKey);
+          loadedThreadHistories.add(threadId);
+          return;
+        }
+
+        const hist = await res.json();
+        container.innerHTML = "";
+        loadedThreadHistories.add(threadId);
+
+        if (!hist.messages || hist.messages.length === 0) {
+          appendInitialWorkspaceGreeting(wsKey);
+        } else {
+          for (const m of hist.messages) {
+            if (m.role === "user") {
+              appendWorkspaceUserBubble(wsKey, m.content);
+            } else {
+              appendWorkspaceAssistantBubble(wsKey, m.content);
+            }
+          }
+        }
+
+        if (hist.status === "awaiting_approval" && hist.pending_action) {
+          renderWorkspaceApproval(wsKey, hist.pending_action);
+        }
+        updateInspectorFromResponse(hist, lat);
+      } catch (err) {
+        container.innerHTML = "";
+        appendInitialWorkspaceGreeting(wsKey);
+        loadedThreadHistories.add(threadId);
+      }
+    }
+
+    function startNewWorkspaceChat(wsKey) {
+      if (!WORKSPACE_CONFIG[wsKey]) return;
+      const cfg = WORKSPACE_CONFIG[wsKey];
+      const newThreadId = cfg.prefix + Math.random().toString(36).substring(2, 10);
+      workspaceThreads[wsKey] = newThreadId;
+      sessionStorage.setItem("thread_" + wsKey, newThreadId);
+      updateThreadDisplay();
+
+      const c = document.getElementById(cfg.containerId);
+      if (c) {
+        c.innerHTML = "";
+        appendInitialWorkspaceGreeting(wsKey);
+        loadedThreadHistories.add(newThreadId);
+      }
+
+      logInspector("ACTION", `Started new [${wsKey}] discussion [${newThreadId}]`);
+      loadRecentChats();
+      resetInspectorState(newThreadId);
+    }
+
+    function startNewChat() {
+      const targetWs = (currentPage === "dashboard" || currentPage === "scheduled") ? "chat" : currentPage;
+      if (currentPage !== targetWs) {
+        switchPage(targetWs);
+      }
+      startNewWorkspaceChat(targetWs);
+    }
+
+    // --- 5. Message Formatting & Bubble Rendering ---
+    function formatAssistantContent(text) {
+      if (!text) return "";
+      let escaped = escapeHtml(text);
+
+      // Highlight PDF citations like [1 Introduction to Trees in Data Structures.pdf, p.1] or [filename.pdf, p.X]
+      escaped = escaped.replace(/\[([a-zA-Z0-9_\- .]+\.pdf,\s*p\.\d+(?:-\d+)?)\]/gi, '<span class="citation-pill">📄 $1</span>');
+      escaped = escaped.replace(/\[([a-zA-Z0-9_\- ]+,\s*p\.\d+(?:-\d+)?)\]/gi, '<span class="citation-pill">📄 $1</span>');
+
+      // Markdown bolding **text**
+      escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+      // Markdown inline code `code`
+      escaped = escaped.replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,0.08); padding:2px 6px; border-radius:4px; font-family:\'JetBrains Mono\', monospace; font-size:12px;">$1</code>');
+
+      return escaped;
+    }
+
+    function appendWorkspaceUserBubble(wsKey, text) {
+      const cfg = WORKSPACE_CONFIG[wsKey];
+      if (!cfg) return;
+      const c = document.getElementById(cfg.containerId);
+      if (!c) return;
+      const d = document.createElement("div");
+      d.className = "message-bubble user";
+      d.innerHTML = `<div class="user-text">${escapeHtml(text)}</div>`;
+      c.appendChild(d);
+      c.scrollTop = c.scrollHeight;
+    }
+
+    function appendWorkspaceAssistantBubble(wsKey, text) {
+      const cfg = WORKSPACE_CONFIG[wsKey];
+      if (!cfg) return;
+      const c = document.getElementById(cfg.containerId);
+      if (!c) return;
+      const d = document.createElement("div");
+      d.className = "message-bubble assistant";
+      d.innerHTML = `
+        <div class="assistant-message">
+          <div class="assistant-avatar">✦</div>
+          <div class="assistant-content">${formatAssistantContent(text)}</div>
+        </div>
+      `;
+      c.appendChild(d);
+      c.scrollTop = c.scrollHeight;
+    }
+
+    // Global Chat backward compatibility wrappers
+    function appendUserBubble(text) { appendWorkspaceUserBubble("chat", text); }
+    function appendAssistantBubble(text) { appendWorkspaceAssistantBubble("chat", text); }
+    function handleChatKeydown(event) { handleWorkspaceChatKeydown(event, "chat"); }
+    function handleSendChat() { handleSendWorkspaceChat("chat"); }
+
+    function handleWorkspaceChatKeydown(event, wsKey) {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        handleSendWorkspaceChat(wsKey);
+      }
+    }
+
+    async function handleSendWorkspaceChat(wsKey) {
+      const cfg = WORKSPACE_CONFIG[wsKey];
+      if (!cfg) return;
+
+      const textarea = document.getElementById(cfg.textareaId);
+      const btn = document.getElementById(cfg.sendBtnId);
+      const text = textarea ? textarea.value.trim() : "";
+      if (!text) return;
+
+      appendWorkspaceUserBubble(wsKey, text);
+      if (textarea) {
+        textarea.value = "";
+        textarea.style.height = "auto";
+      }
+      if (btn) btn.disabled = true;
+
+      const threadId = workspaceThreads[wsKey];
+      logInspector("ACTION", `[${wsKey}] prompt dispatched: "${text.substring(0, 40)}..."`);
+
+      const thinkingId = "thinking-" + wsKey + "-" + Date.now();
+      const c = document.getElementById(cfg.containerId);
+      const thinkingDiv = document.createElement("div");
+      thinkingDiv.id = thinkingId;
+      thinkingDiv.className = "message-bubble assistant";
+      thinkingDiv.innerHTML = `
+        <div class="assistant-message">
+          <div class="assistant-avatar">✦</div>
+          <div class="assistant-content">
+            <span style="color:var(--text-secondary); font-size:12.5px;">Thinking &amp; executing ${wsKey} agent...</span>
+          </div>
+        </div>
+      `;
+      if (c) {
+        c.appendChild(thinkingDiv);
+        c.scrollTop = c.scrollHeight;
+      }
+
+      const startT = performance.now();
+      try {
+        const payload = {
+          thread_id: threadId,
+          message: text,
+          workspace: wsKey,
+          agent_type: cfg.agentType
+        };
+
+        const res = await apiFetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const lat = Math.round(performance.now() - startT);
+        const thinkEl = document.getElementById(thinkingId);
+        if (thinkEl) thinkEl.remove();
+
+        const data = await res.json();
+        updateInspectorFromResponse(data, lat);
+
+        if (data.status === "awaiting_approval") {
+          renderWorkspaceApproval(wsKey, data.pending_action);
+          logInspector("HITL", `Paused execution for approval: ${data.pending_action.tool || data.pending_action.step}`);
+        } else if (data.response) {
+          appendWorkspaceAssistantBubble(wsKey, data.response);
+          logInspector("SUCCESS", `[${wsKey}] Agent response delivered in ${lat}ms`);
+        } else if (data.detail) {
+          appendWorkspaceAssistantBubble(wsKey, "Error: " + data.detail);
+        }
+        loadRecentChats();
+      } catch (err) {
+        const thinkEl = document.getElementById(thinkingId);
+        if (thinkEl) thinkEl.remove();
+        appendWorkspaceAssistantBubble(wsKey, "Execution error: " + err.message);
+      } finally {
+        if (btn) btn.disabled = false;
+        if (textarea) textarea.focus();
+      }
+    }
+
+    // --- 6. HITL Approval Handling ---
+    function renderWorkspaceApproval(wsKey, action) {
+      const cfg = WORKSPACE_CONFIG[wsKey];
+      if (!cfg) return;
+      const c = document.getElementById(cfg.containerId);
+      if (!c) return;
+
+      const cardId = "approval-" + Math.random().toString(36).substring(2, 8);
+      const div = document.createElement("div");
+      div.className = "approval-card";
+      div.id = cardId;
+
+      const toolName = action.tool || action.step || "Action";
+      const args = action.args || {};
+      const argsFormatted = JSON.stringify(args, null, 2);
+
+      let rowsHtml = "";
+      for (const [k, v] of Object.entries(args)) {
+        rowsHtml += `
+          <div class="approval-row">
+            <span>${escapeHtml(k)}</span>
+            <span style="max-width:360px; text-align:right; word-break:break-all;">${escapeHtml(typeof v === 'object' ? JSON.stringify(v) : String(v))}</span>
+          </div>
+        `;
+      }
+
+      div.innerHTML = `
+        <div class="approval-header">
+          <span>⚡</span>
+          <span>Approval required &bull; ${escapeHtml(toolName)}</span>
+        </div>
+        <div class="approval-summary">${escapeHtml(action.summary || "This action requires your confirmation before proceeding.")}</div>
+        ${rowsHtml}
+        <div class="approval-actions" id="actions-${cardId}">
+          <button class="btn sm" onclick="submitRejectApproval('${wsKey}', '${cardId}')">Reject</button>
+          <button class="btn sm" onclick="toggleEditApproval('${cardId}')">Edit</button>
+          <button class="btn primary sm" onclick="submitConfirmApproval('${wsKey}', '${cardId}')">Approve</button>
+        </div>
+        <div class="approval-edit-pane" id="edit-${cardId}">
+          <div style="font-size:11.5px; font-weight:600; margin-bottom:6px; color:var(--text-secondary);">Edit Arguments (JSON):</div>
+          <textarea id="edit-json-${cardId}" rows="4">${escapeHtml(argsFormatted)}</textarea>
+          <button class="btn primary sm" style="margin-top:8px;" onclick="submitConfirmEditedApproval('${wsKey}', '${cardId}')">Confirm Edited Action</button>
+        </div>
+      `;
+
+      c.appendChild(div);
+      c.scrollTop = c.scrollHeight;
+    }
+
+    function renderApproval(action) {
+      renderWorkspaceApproval("chat", action);
+    }
+
+    function toggleEditApproval(cardId) {
+      const p = document.getElementById("edit-" + cardId);
+      if (p) p.style.display = p.style.display === "block" ? "none" : "block";
+    }
+
+    async function submitConfirmApproval(wsKey, cardId) {
+      logInspector("HITL", `[${wsKey}] User approved action`);
+      const threadId = workspaceThreads[wsKey] || getActiveThreadId();
+      try {
+        const startT = performance.now();
+        const res = await apiFetch("/approve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ thread_id: threadId, edits: {} }),
+        });
+        const lat = Math.round(performance.now() - startT);
+        const data = await res.json();
+        resolveApprovalUI(cardId, "APPROVED", "var(--success)");
+        updateInspectorFromResponse(data, lat);
+        handleWorkspaceResume(wsKey, data);
+      } catch (err) {
+        alert("Approval failed: " + err.message);
+      }
+    }
+
+    async function submitConfirmEditedApproval(wsKey, cardId) {
+      logInspector("HITL", `[${wsKey}] User approved action with edited arguments`);
+      const threadId = workspaceThreads[wsKey] || getActiveThreadId();
+      try {
+        const raw = document.getElementById("edit-json-" + cardId).value;
+        const edits = JSON.parse(raw);
+        const startT = performance.now();
+        const res = await apiFetch("/approve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ thread_id: threadId, edits: edits }),
+        });
+        const lat = Math.round(performance.now() - startT);
+        const data = await res.json();
+        resolveApprovalUI(cardId, "APPROVED (WITH EDITS)", "var(--success)");
+        updateInspectorFromResponse(data, lat);
+        handleWorkspaceResume(wsKey, data);
+      } catch (err) {
+        alert("Invalid JSON or approval failed: " + err.message);
+      }
+    }
+
+    async function submitRejectApproval(wsKey, cardId) {
+      const reason = prompt("Reason for rejection:", "User rejected action");
+      if (reason === null) return;
+      logInspector("HITL", `[${wsKey}] User rejected action: "${reason}"`);
+      const threadId = workspaceThreads[wsKey] || getActiveThreadId();
+      try {
+        const startT = performance.now();
+        const res = await apiFetch("/reject", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ thread_id: threadId, reason: reason || "User rejected" }),
+        });
+        const lat = Math.round(performance.now() - startT);
+        const data = await res.json();
+        resolveApprovalUI(cardId, "REJECTED", "var(--danger)");
+        updateInspectorFromResponse(data, lat);
+        handleWorkspaceResume(wsKey, data);
+      } catch (err) {
+        alert("Rejection failed: " + err.message);
+      }
+    }
+
+    function resolveApprovalUI(cardId, statusText, color) {
+      const el = document.getElementById(cardId);
+      if (!el) return;
+      el.style.borderColor = color;
+      el.querySelector(".approval-header").innerHTML = `<span style="color:${color};">● ${statusText}</span>`;
+      const actions = document.getElementById("actions-" + cardId);
+      if (actions) actions.style.display = "none";
+      const editPane = document.getElementById("edit-" + cardId);
+      if (editPane) editPane.style.display = "none";
+    }
+
+    function handleWorkspaceResume(wsKey, data) {
+      if (data.status === "awaiting_approval") {
+        renderWorkspaceApproval(wsKey, data.pending_action);
+      } else if (data.response) {
+        appendWorkspaceAssistantBubble(wsKey, data.response);
+      } else if (data.agent_result && data.agent_result.summary) {
+        appendWorkspaceAssistantBubble(wsKey, data.agent_result.summary);
+      }
+      loadRecentChats();
+    }
+
+    // --- 6. Dashboard Workspace Logic ---
+    async function loadDashboardWorkspace() {
+      loadRecentChats();
+      try {
+        const res = await apiFetch("/system/status");
+        if (!res.ok) return;
+        const data = await res.json();
+
+        // Update stats
+        if (data.stats) {
+          document.getElementById("dash-doc-count").innerText = data.stats.documents || 0;
+          document.getElementById("dash-sched-count").innerText = data.stats.scheduled_emails || 0;
+          document.getElementById("dash-thread-count").innerText = data.stats.recent_threads || 0;
+        }
+
+        // Update subsystem connection matrix
+        if (data.connections) {
+          const c = data.connections;
+          const grid = document.getElementById("dash-subsystem-grid");
+          if (grid) {
+            grid.innerHTML = `
+              <div class="list-item" style="padding:12px 16px; background:var(--bg-card); border-radius:12px;">
+                <span>Gemini LLM</span>
+                <span class="badge ${c.gemini?.status === 'connected' ? '' : 'neutral'}">${c.gemini?.status || 'ready'}</span>
+              </div>
+              <div class="list-item" style="padding:12px 16px; background:var(--bg-card); border-radius:12px;">
+                <span>GitHub API</span>
+                <span class="badge ${c.github?.status === 'connected' ? '' : 'neutral'}">${c.github?.status || 'ready'}</span>
+              </div>
+              <div class="list-item" style="padding:12px 16px; background:var(--bg-card); border-radius:12px;">
+                <span>Google Calendar</span>
+                <span class="badge ${c.calendar?.status === 'connected' ? '' : 'neutral'}">${c.calendar?.status || 'ready'}</span>
+              </div>
+              <div class="list-item" style="padding:12px 16px; background:var(--bg-card); border-radius:12px;">
+                <span>Gmail Service</span>
+                <span class="badge ${c.gmail?.status === 'connected' ? '' : 'neutral'}">${c.gmail?.status || 'ready'}</span>
+              </div>
+              <div class="list-item" style="padding:12px 16px; background:var(--bg-card); border-radius:12px;">
+                <span>Pinecone RAG</span>
+                <span class="badge ${c.rag?.status === 'connected' ? '' : 'neutral'}">${c.rag?.status || 'ready'}</span>
+              </div>
+              <div class="list-item" style="padding:12px 16px; background:var(--bg-card); border-radius:12px;">
+                <span>SQLite Checkpointer</span>
+                <span class="badge ${c.checkpointer?.status === 'connected' ? '' : 'neutral'}">${c.checkpointer?.status || 'connected'}</span>
+              </div>
+            `;
+          }
+
+          // Count active subsystems
+          let activeCount = 0;
+          const totalCount = 6;
+          if (c.gemini?.status === 'connected') activeCount++;
+          if (c.github?.status === 'connected') activeCount++;
+          if (c.calendar?.status === 'connected') activeCount++;
+          if (c.gmail?.status === 'connected') activeCount++;
+          if (c.rag?.status === 'connected') activeCount++;
+          if (c.checkpointer?.status === 'connected') activeCount++;
+          document.getElementById("dash-subsystems-count").innerText = `${activeCount} / ${totalCount}`;
+
+          // Sync with Inspector MCP tab
+          if (c.calendar) document.getElementById("mcp-cal-badge").innerText = c.calendar.status || 'Connected';
+          if (c.gmail) document.getElementById("mcp-mail-badge").innerText = c.gmail.status || 'Connected';
+          if (c.github) document.getElementById("mcp-git-badge").innerText = c.github.status || 'Connected';
+          if (c.rag) document.getElementById("mcp-rag-badge").innerText = c.rag.status || 'Connected';
+          if (c.gemini?.model) document.getElementById("tokens-model").innerText = c.gemini.model;
+        }
+      } catch (err) {
+        console.warn("Dashboard system status load error:", err.message);
+      }
+    }
+
+    // --- 7. Documents Workspace Logic ---
+    async function loadDocumentsWorkspace() {
+      const container = document.getElementById("documents-list-container");
+      container.innerHTML = '<div style="padding:20px; color:var(--text-secondary); font-size:13px;">Loading documents...</div>';
+
+      try {
+        const res = await apiFetch("/documents");
+        const docs = await res.json();
+        document.getElementById("docs-count-badge").innerText = `${docs.length} documents`;
+
+        if (!docs || docs.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">▣</div>
+              <div class="empty-state-title">No documents uploaded</div>
+              <div class="empty-state-desc">Upload a PDF document to index it with dense and sparse embeddings.</div>
+              <button class="btn primary sm" onclick="document.getElementById('pdf-file-input').click()">Upload PDF</button>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = docs.map(d => `
+          <div class="list-item">
+            <div>
+              <div class="item-title">${escapeHtml(d.filename)}</div>
+              <div class="item-meta">${d.pages} pages &bull; ${d.chunk_count} chunks &bull; Status: <span class="badge ${d.status==='indexed'?'':'neutral'}">${escapeHtml(d.status)}</span></div>
+            </div>
+            <div>
+              <button class="btn danger sm" onclick="handleDeleteDoc('${d.document_id}')">Delete</button>
+            </div>
+          </div>
+        `).join("");
+      } catch (err) {
+        container.innerHTML = `<div style="padding:20px; color:var(--danger); font-size:13px;">Error loading documents: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    async function handleFileSelected(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("file", file);
+      logInspector("ACTION", `Ingesting PDF document: ${file.name}`);
+
+      try {
+        const res = await apiFetch("/documents/ingest", {
+          method: "POST",
+          body: formData,
+        });
+        if (res.ok) {
+          alert(`Document '${file.name}' ingested successfully!`);
+          logInspector("SUCCESS", `Document '${file.name}' indexed in Pinecone`);
+          loadDocumentsWorkspace();
+        } else {
+          const err = await res.json();
+          alert("Ingest failed: " + (err.detail || "Error occurred"));
+        }
+      } catch (err) {
+        alert("Upload error: " + err.message);
+      } finally {
+        event.target.value = "";
+      }
+    }
+
+    async function handleDeleteDoc(docId) {
+      if (!confirm("Are you sure you want to delete this document?")) return;
+      logInspector("ACTION", `Deleting document ID ${docId}`);
+      try {
+        const res = await apiFetch("/documents/" + docId, { method: "DELETE" });
+        if (res.ok) {
+          loadDocumentsWorkspace();
+          logInspector("SUCCESS", `Document deleted ID ${docId}`);
+        } else {
+          alert("Delete failed.");
+        }
+      } catch (err) {
+        alert("Delete error: " + err.message);
+      }
+    }
+
+
+
+    // --- 8. GitHub Workspace Logic ---
+    async function loadGithubWorkspace() {
+      if (currentGithubRepos.length === 0) {
+        handleSearchGithub();
+      }
+    }
+
+    async function handleSearchGithub() {
+      const input = document.getElementById("github-search-input");
+      const query = input.value.trim();
+      const container = document.getElementById("github-results-container");
+      const panelTitle = document.getElementById("github-panel-title");
+      const countBadge = document.getElementById("github-count-badge");
+
+      panelTitle.innerText = "Repositories";
+      container.innerHTML = '<div style="padding:20px; color:var(--text-secondary); font-size:13px;">Searching repositories...</div>';
+      logInspector("ACTION", `GitHub search query: "${query || 'default repos'}"`);
+
+      try {
+        const url = query 
+          ? `/api/github/repos?query=${encodeURIComponent(query)}` 
+          : `/api/github/repos`;
+        const res = await apiFetch(url);
+        const data = await res.json();
+        const repos = data.data?.repositories || data.repositories || [];
+        currentGithubRepos = repos;
+        countBadge.innerText = `${repos.length} found`;
+
+        if (repos.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">◉</div>
+              <div class="empty-state-title">No repositories found</div>
+              <div class="empty-state-desc">Try another user or keyword search (e.g. user:abdullahnadeem215).</div>
+            </div>
+          `;
+          return;
+        }
+
+        // Determine primary owner
+        let detectedOwner = "";
+        if (query && !query.includes(" ") && !query.includes(":")) {
+          detectedOwner = query;
+        } else if (repos.length > 0 && repos[0].full_name && repos[0].full_name.includes("/")) {
+          detectedOwner = repos[0].full_name.split("/")[0];
+        }
+
+        let headerActionHtml = "";
+        if (detectedOwner && (!query || !query.startsWith("user:"))) {
+          headerActionHtml = ` &bull; <button class="btn sm" onclick="viewAllUserRepos('${escapeHtml(detectedOwner)}')" style="font-size:11px; padding:2px 8px; margin-left:6px;">View all repositories of @${escapeHtml(detectedOwner)}</button>`;
+        }
+        panelTitle.innerHTML = `<span>Repositories</span>${headerActionHtml}`;
+
+        container.innerHTML = repos.map(r => {
+          const owner = (r.full_name && r.full_name.includes("/")) ? r.full_name.split("/")[0] : "";
+          return `
+          <div class="list-item" onclick="inspectGithubRepo('${escapeHtml(r.full_name)}')">
+            <div>
+              <div class="item-title" style="color:#c4b5fd;">${escapeHtml(r.full_name)}</div>
+              <div class="item-meta">${escapeHtml(r.description || 'No description provided')} &bull; ★ ${r.stars || 0} &bull; ⑂ ${r.forks || 0}</div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              ${owner ? `<button class="btn sm" onclick="event.stopPropagation(); viewAllUserRepos('${escapeHtml(owner)}')" title="View all repositories of ${escapeHtml(owner)}">All Repos of @${escapeHtml(owner)} &rarr;</button>` : ''}
+              <a href="${escapeHtml(r.html_url)}" target="_blank" onclick="event.stopPropagation()" class="btn sm">View on GitHub &rarr;</a>
+            </div>
+          </div>
+        `}).join("");
+      } catch (err) {
+        container.innerHTML = `<div style="padding:20px; color:var(--danger); font-size:13px;">Error searching GitHub: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    function viewAllUserRepos(owner) {
+      if (!owner) return;
+      const input = document.getElementById("github-search-input");
+      if (input) input.value = "user:" + owner;
+      handleSearchGithub();
+    }
+
+    async function inspectGithubRepo(repoName) {
+      activeGithubRepo = repoName;
+      const container = document.getElementById("github-results-container");
+      const panelTitle = document.getElementById("github-panel-title");
+      panelTitle.innerHTML = `<span style="cursor:pointer; color:var(--accent-purple);" onclick="handleSearchGithub()">&larr; Back to Repositories</span> &bull; ${escapeHtml(repoName)}`;
+
+      container.innerHTML = '<div style="padding:20px; color:var(--text-secondary); font-size:13px;">Loading repository details...</div>';
+      logInspector("ACTION", `Inspecting GitHub repo [${repoName}]`);
+
+      try {
+        const res = await apiFetch("/api/github/repo?repo=" + encodeURIComponent(repoName));
+        const data = await res.json();
+        const issues = data.issues || [];
+        const prs = data.pull_requests || [];
+        const commits = data.commits || [];
+        const owner = repoName.includes("/") ? repoName.split("/")[0] : "";
+
+        container.innerHTML = `
+          <div style="padding:14px 18px; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:13.5px; font-weight:700; color:#ffffff;">${escapeHtml(repoName)}</div>
+              <div style="font-size:11.5px; color:var(--text-secondary); margin-top:2px;">${escapeHtml(data.repository?.description || '')}</div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              ${owner ? `<button class="btn sm" onclick="viewAllUserRepos('${escapeHtml(owner)}')">All Repos by @${escapeHtml(owner)} &rarr;</button>` : ''}
+              <a href="https://github.com/${escapeHtml(repoName)}" target="_blank" class="btn sm primary">Open on GitHub &rarr;</a>
+            </div>
+          </div>
+
+          <div style="padding:14px 18px;">
+            <div class="tabs-bar">
+              <button class="tab-btn active" id="btn-tab-issues" onclick="showRepoSubTab('issues')">Issues (${issues.length})</button>
+              <button class="tab-btn" id="btn-tab-prs" onclick="showRepoSubTab('prs')">Pull Requests (${prs.length})</button>
+              <button class="tab-btn" id="btn-tab-commits" onclick="showRepoSubTab('commits')">Commits (${commits.length})</button>
+            </div>
+
+            <div id="repo-subtab-issues">
+              ${issues.length === 0 ? '<div style="color:var(--text-secondary); font-size:12.5px; padding:10px 0;">No open issues.</div>' : issues.map(i => `
+                <div style="padding:8px 0; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; font-size:12.5px;">
+                  <span>#${i.number} ${escapeHtml(i.title)}</span>
+                  <a href="${escapeHtml(i.html_url)}" target="_blank" style="color:#c4b5fd; text-decoration:none;">View</a>
+                </div>
+              `).join("")}
+            </div>
+
+            <div id="repo-subtab-prs" style="display:none;">
+              ${prs.length === 0 ? '<div style="color:var(--text-secondary); font-size:12.5px; padding:10px 0;">No pull requests.</div>' : prs.map(p => `
+                <div style="padding:8px 0; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; font-size:12.5px;">
+                  <span>#${p.number} ${escapeHtml(p.title)}</span>
+                  <a href="${escapeHtml(p.html_url)}" target="_blank" style="color:#c4b5fd; text-decoration:none;">View</a>
+                </div>
+              `).join("")}
+            </div>
+
+            <div id="repo-subtab-commits" style="display:none;">
+              ${commits.length === 0 ? '<div style="color:var(--text-secondary); font-size:12.5px; padding:10px 0;">No commits retrieved.</div>' : commits.map(c => `
+                <div style="padding:8px 0; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; font-size:12.5px;">
+                  <div>
+                    <div style="font-weight:600;">${escapeHtml(c.message)}</div>
+                    <div style="font-size:11px; color:var(--text-secondary); margin-top:1px;">by ${escapeHtml(c.author || 'unknown')}</div>
+                  </div>
+                  <span style="font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--text-secondary);">${(c.sha || '').substring(0, 7)}</span>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        container.innerHTML = `<div style="padding:20px; color:var(--danger); font-size:13px;">Error loading repo details: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    function showRepoSubTab(tab) {
+      document.getElementById("btn-tab-issues").className = tab === 'issues' ? 'tab-btn active' : 'tab-btn';
+      document.getElementById("btn-tab-prs").className = tab === 'prs' ? 'tab-btn active' : 'tab-btn';
+      document.getElementById("btn-tab-commits").className = tab === 'commits' ? 'tab-btn active' : 'tab-btn';
+
+      document.getElementById("repo-subtab-issues").style.display = tab === 'issues' ? 'block' : 'none';
+      document.getElementById("repo-subtab-prs").style.display = tab === 'prs' ? 'block' : 'none';
+      document.getElementById("repo-subtab-commits").style.display = tab === 'commits' ? 'block' : 'none';
+    }
+
+    // --- 9. Calendar Workspace Logic ---
+    async function loadCalendarWorkspace() {
+      const container = document.getElementById("calendar-events-container");
+      container.innerHTML = '<div style="padding:20px; color:var(--text-secondary); font-size:13px;">Loading events...</div>';
+
+      try {
+        const res = await apiFetch("/api/calendar/events");
+        const data = await res.json();
+        const events = data.events || [];
+
+        if (events.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">□</div>
+              <div class="empty-state-title">No upcoming events</div>
+              <div class="empty-state-desc">Your calendar is currently clear. You can schedule events or check free slots.</div>
+              <button class="btn primary sm" onclick="openCreateEventModal()">＋ Create Event</button>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = events.map(e => `
+          <div class="list-item">
+            <div>
+              <div class="item-title">${escapeHtml(e.summary || 'Event')}</div>
+              <div class="item-meta">Start: ${escapeHtml(e.start?.dateTime || e.start?.date || 'N/A')} &bull; Status: ${escapeHtml(e.status || 'confirmed')}</div>
+            </div>
+            <span class="badge">Scheduled</span>
+          </div>
+        `).join("");
+      } catch (err) {
+        container.innerHTML = `<div style="padding:20px; color:var(--danger); font-size:13px;">Error loading calendar: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    function toggleFreeSlotsPanel() {
+      const p = document.getElementById("calendar-free-slots-panel");
+      p.style.display = p.style.display === "block" ? "none" : "block";
+      if (p.style.display === "block") {
+        const now = new Date();
+        const later = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+        document.getElementById("slot-start-date").value = now.toISOString().slice(0, 16);
+        document.getElementById("slot-end-date").value = later.toISOString().slice(0, 16);
+      }
+    }
+
+    async function handleFindFreeSlotsAction() {
+      const start = document.getElementById("slot-start-date").value;
+      const end = document.getElementById("slot-end-date").value;
+      const duration = document.getElementById("slot-duration").value;
+      const resultsContainer = document.getElementById("calendar-free-slots-results");
+
+      if (!start || !end) {
+        alert("Please specify start and end dates");
+        return;
+      }
+
+      resultsContainer.innerHTML = '<div style="color:var(--text-secondary); font-size:12.5px;">Checking free slots...</div>';
+      logInspector("ACTION", `Finding free slots ${start} to ${end}`);
+
+      try {
+        const isoStart = new Date(start).toISOString();
+        const isoEnd = new Date(end).toISOString();
+        const url = `/api/calendar/free-slots?start_date=${encodeURIComponent(isoStart)}&end_date=${encodeURIComponent(isoEnd)}&duration_minutes=${duration}`;
+        const res = await apiFetch(url);
+        const data = await res.json();
+        const slots = data.free_slots || [];
+
+        if (slots.length === 0) {
+          resultsContainer.innerHTML = '<div style="color:var(--text-secondary); font-size:12px; padding:10px 0;">No free slots found in this range.</div>';
+          return;
+        }
+
+        resultsContainer.innerHTML = `
+          <div style="font-size:11.5px; font-weight:700; color:var(--text-secondary); margin-bottom:6px;">Available Slots (${slots.length}):</div>
+          <div style="display:flex; flex-wrap:wrap; gap:6px;">
+            ${slots.map(s => `
+              <div style="background:var(--bg-card-inner); border:1px solid var(--border-light); padding:5px 10px; border-radius:6px; font-size:11.5px; font-family:'JetBrains Mono', monospace;">
+                ${escapeHtml(s.start || s[0])} &rarr; ${escapeHtml(s.end || s[1])}
+              </div>
+            `).join("")}
+          </div>
+        `;
+      } catch (err) {
+        resultsContainer.innerHTML = `<div style="color:var(--danger); font-size:12.5px;">Error: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    function openCreateEventModal() {
+      document.getElementById("event-modal").style.display = "flex";
+      const now = new Date();
+      now.setHours(now.getHours() + 1, 0, 0, 0);
+      document.getElementById("event-start").value = now.toISOString().slice(0, 16);
+    }
+    function closeCreateEventModal() {
+      document.getElementById("event-modal").style.display = "none";
+    }
+
+    async function handleCreateEventSubmit() {
+      const title = document.getElementById("event-title").value.trim();
+      const start = document.getElementById("event-start").value;
+      const duration = document.getElementById("event-duration").value.trim();
+      const desc = document.getElementById("event-desc").value.trim();
+
+      if (!title || !start) {
+        alert("Please provide event title and start datetime");
+        return;
+      }
+
+      closeCreateEventModal();
+      switchPage("calendar");
+      const prompt = `Create a calendar event called "${title}" on ${start} for ${duration}${desc ? ' with description: ' + desc : ''}`;
+      const ta = document.getElementById("cal-chat-textarea");
+      if (ta) ta.value = prompt;
+      handleSendWorkspaceChat("calendar");
+    }
+
+    // --- 10. Email Workspace Logic ---
+    async function loadEmailWorkspace() {
+      const container = document.getElementById("email-list-container");
+      const title = document.getElementById("email-panel-title");
+      const badge = document.getElementById("email-count-badge");
+      title.innerText = "Inbox";
+      container.innerHTML = '<div style="padding:20px; color:var(--text-secondary); font-size:13px;">Loading messages...</div>';
+
+      try {
+        const res = await apiFetch("/api/email/messages");
+        const data = await res.json();
+        const msgs = data.messages || [];
+        badge.innerText = `${msgs.length} messages`;
+
+        if (msgs.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">✉</div>
+              <div class="empty-state-title">No email messages</div>
+              <div class="empty-state-desc">Your inbox is clear, or Gmail credentials are not configured.</div>
+              <button class="btn primary sm" onclick="openComposeEmailModal()">＋ Compose</button>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = msgs.map(m => `
+          <div class="list-item" onclick="inspectEmailMessage('${escapeHtml(m.id)}')">
+            <div>
+              <div class="item-title">${escapeHtml(m.sender || m.from || 'Me')} &bull; ${escapeHtml(m.subject || 'No Subject')}</div>
+              <div class="item-meta">${escapeHtml(m.snippet || m.body || '')}</div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button class="btn danger sm" onclick="event.stopPropagation(); handleDeleteEmailAction('${escapeHtml(m.id)}')">Delete</button>
+              <button class="btn sm" onclick="event.stopPropagation(); inspectEmailMessage('${escapeHtml(m.id)}')">Read &rarr;</button>
+            </div>
+          </div>
+        `).join("");
+      } catch (err) {
+        container.innerHTML = `<div style="padding:20px; color:var(--danger); font-size:13px;">Error loading messages: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    async function inspectEmailMessage(messageId) {
+      const container = document.getElementById("email-list-container");
+      const title = document.getElementById("email-panel-title");
+      title.innerHTML = '<span style="cursor:pointer; color:var(--accent-purple);" onclick="loadEmailWorkspace()">&larr; Back to Inbox</span> &bull; Message View';
+      container.innerHTML = '<div style="padding:20px; color:var(--text-secondary); font-size:13px;">Loading message details...</div>';
+
+      logInspector("ACTION", `Inspecting email ID ${messageId}`);
+
+      try {
+        const res = await apiFetch("/api/email/messages/" + encodeURIComponent(messageId));
+        const msg = await res.json();
+
+        container.innerHTML = `
+          <div style="padding:18px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; gap:12px;">
+              <div>
+                <div style="font-size:15px; font-weight:700; color:#ffffff; margin-bottom:6px;">${escapeHtml(msg.subject || 'No Subject')}</div>
+                <div style="font-size:12px; color:var(--text-secondary);">
+                  From: <strong style="color:#ffffff;">${escapeHtml(msg.from || msg.sender || 'Unknown')}</strong> &bull; 
+                  To: ${escapeHtml(msg.to || 'Me')}
+                </div>
+              </div>
+              <button class="btn danger sm" onclick="handleDeleteEmailAction('${escapeHtml(messageId)}')">Delete Email</button>
+            </div>
+            <div style="background:var(--bg-card-inner); border:1px solid var(--border-light); border-radius:10px; padding:16px; font-size:13px; line-height:1.6; white-space:pre-wrap; color:#e2e8f0;">${escapeHtml(msg.body || msg.snippet || 'No message body.')}</div>
+          </div>
+        `;
+      } catch (err) {
+        container.innerHTML = `<div style="padding:20px; color:var(--danger); font-size:13px;">Error loading message: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    async function handleDeleteEmailAction(messageId) {
+      if (!confirm("Are you sure you want to move this email to trash?")) return;
+      logInspector("ACTION", `Deleting email ID ${messageId}`);
+      try {
+        const res = await apiFetch("/api/email/messages/" + encodeURIComponent(messageId), {
+          method: "DELETE",
+        });
+        if (res.ok) {
+          logInspector("SUCCESS", `Email ${messageId} moved to trash`);
+          loadEmailWorkspace();
+        } else {
+          const err = await res.json();
+          alert("Failed to delete email: " + (err.detail || "Error occurred"));
+        }
+      } catch (err) {
+        alert("Delete error: " + err.message);
+      }
+    }
+
+    async function handleSearchEmailsAction() {
+      const query = document.getElementById("email-search-input").value.trim();
+      const container = document.getElementById("email-list-container");
+      const badge = document.getElementById("email-count-badge");
+      container.innerHTML = '<div style="padding:20px; color:var(--text-secondary); font-size:13px;">Searching emails...</div>';
+      logInspector("ACTION", `Searching emails: "${query}"`);
+
+      try {
+        const res = await apiFetch("/api/email/messages?query=" + encodeURIComponent(query));
+        const data = await res.json();
+        const msgs = data.messages || [];
+        badge.innerText = `${msgs.length} found`;
+
+        if (msgs.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">✉</div>
+              <div class="empty-state-title">No matching messages</div>
+              <div class="empty-state-desc">Try another search keyword.</div>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = msgs.map(m => `
+          <div class="list-item" onclick="inspectEmailMessage('${escapeHtml(m.id)}')">
+            <div>
+              <div class="item-title">${escapeHtml(m.sender || m.from || 'Me')} &bull; ${escapeHtml(m.subject || 'No Subject')}</div>
+              <div class="item-meta">${escapeHtml(m.snippet || m.body || '')}</div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button class="btn danger sm" onclick="event.stopPropagation(); handleDeleteEmailAction('${escapeHtml(m.id)}')">Delete</button>
+              <button class="btn sm" onclick="event.stopPropagation(); inspectEmailMessage('${escapeHtml(m.id)}')">Read &rarr;</button>
+            </div>
+          </div>
+        `).join("");
+      } catch (err) {
+        container.innerHTML = `<div style="padding:20px; color:var(--danger); font-size:13px;">Search error: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    function openComposeEmailModal() {
+      document.getElementById("compose-modal").style.display = "flex";
+    }
+    function closeComposeEmailModal() {
+      document.getElementById("compose-modal").style.display = "none";
+    }
+
+    function handleSaveDraftOnly() {
+      const to = document.getElementById("compose-to").value.trim();
+      const subject = document.getElementById("compose-subject").value.trim();
+      const body = document.getElementById("compose-body").value.trim();
+
+      if (!to || !subject) {
+        alert("Please provide recipient and subject");
+        return;
+      }
+
+      closeComposeEmailModal();
+      switchPage("email");
+      const prompt = `Draft an email to ${to} with subject "${subject}" and body "${body}"`;
+      const ta = document.getElementById("mail-chat-textarea");
+      if (ta) ta.value = prompt;
+      handleSendWorkspaceChat("email");
+    }
+
+    function handleSendEmailAction() {
+      const to = document.getElementById("compose-to").value.trim();
+      const subject = document.getElementById("compose-subject").value.trim();
+      const body = document.getElementById("compose-body").value.trim();
+
+      if (!to || !subject) {
+        alert("Please provide recipient and subject");
+        return;
+      }
+
+      closeComposeEmailModal();
+      switchPage("email");
+      const prompt = `Send an email to ${to} with subject "${subject}" saying "${body}"`;
+      const ta = document.getElementById("mail-chat-textarea");
+      if (ta) ta.value = prompt;
+      handleSendWorkspaceChat("email");
+    }
+
+    // --- 11. Scheduled Emails Workspace Logic ---
+    async function loadScheduledWorkspace() {
+      const container = document.getElementById("scheduled-emails-container");
+      container.innerHTML = '<div style="padding:20px; color:var(--text-secondary); font-size:13px;">Loading queue...</div>';
+
+      try {
+        const res = await apiFetch("/scheduled-emails");
+        allScheduledRecords = await res.json();
+        document.getElementById("scheduled-count-badge").innerText = `${allScheduledRecords.length} records`;
+        renderScheduledList(allScheduledRecords);
+      } catch (err) {
+        container.innerHTML = `<div style="padding:20px; color:var(--danger); font-size:13px;">Error: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    function filterScheduledEmails(status) {
+      document.querySelectorAll("#scheduled-tabs .tab-btn").forEach(b => b.classList.remove("active"));
+      event.target.classList.add("active");
+
+      if (status === "all") {
+        renderScheduledList(allScheduledRecords);
+      } else {
+        const filtered = allScheduledRecords.filter(r => r.status === status);
+        renderScheduledList(filtered);
+      }
+    }
+
+    function renderScheduledList(records) {
+      const container = document.getElementById("scheduled-emails-container");
+      if (!records || records.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">◷</div>
+            <div class="empty-state-title">No scheduled emails</div>
+            <div class="empty-state-desc">No messages are currently waiting in the dispatch queue.</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = records.map(r => `
+        <div class="list-item">
+          <div>
+            <div class="item-title">${escapeHtml(r.subject)} &rarr; ${escapeHtml(r.recipients)}</div>
+            <div class="item-meta">Scheduled: ${escapeHtml(r.scheduled_at || 'N/A')} &bull; Status: <span class="badge ${r.status==='pending'?'pending':(r.status==='sent'?'':'danger')}">${escapeHtml(r.status)}</span></div>
+          </div>
+          <div>
+            ${r.status === 'pending' ? `<button class="btn danger sm" onclick="handleCancelScheduled('${r.id}')">Cancel</button>` : ''}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function handleCancelScheduled(id) {
+      if (!confirm("Are you sure you want to cancel this scheduled email?")) return;
+      logInspector("ACTION", `Cancelling scheduled email ID ${id}`);
+      try {
+        const res = await apiFetch("/scheduled-emails/" + id, { method: "DELETE" });
+        if (res.ok) {
+          loadScheduledWorkspace();
+          logInspector("SUCCESS", `Scheduled email cancelled ID ${id}`);
+        } else {
+          alert("Failed to cancel scheduled email.");
+        }
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
+    }
+
+    // --- 12. Settings & Modals ---
+    function openApiKeyModal() {
+      document.getElementById("api-key-input").value = sessionStorage.getItem("api_key") || "";
+      document.getElementById("api-key-modal").style.display = "flex";
+    }
+    function closeApiKeyModal() {
+      document.getElementById("api-key-modal").style.display = "none";
+    }
+    function saveApiKey() {
+      const key = document.getElementById("api-key-input").value.trim();
+      sessionStorage.setItem("api_key", key);
+      closeApiKeyModal();
+      loadRecentChats();
+    }
+
+    // --- 13. Utilities ---
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // --- 14. Bootstrap ---
+    switchPage("dashboard");
+    loadRecentChats();
+</script>
+</body>
+</html>
